@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "checkout-react-sdk",
+    "name": "BoxpayCheckout",
     "slug": "checkout-react-sdk",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/boxpay-logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/boxpay-logo.png",
         "backgroundColor": "#ffffff"
       }
     },
