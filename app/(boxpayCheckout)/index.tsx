@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Pressable, BackHandler, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, BackHandler } from 'react-native';
 import Header from './components/header';
 import axios from 'axios';
-
+import upiPostRequest from './postRequest/upiPostRequest';
+import { decode as atob } from 'base-64';
+import { Linking } from 'react-native';
+import LottieView from 'lottie-react-native';
+import PaymentSuccess from './components/paymentSuccess';
+import SessionExpire from './components/sessionExpire';
+import PaymentFailed from './components/paymentFailed';
+import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
 
 // Define the PaymentResult type (you can adjust it as per your actual result structure)
 type PaymentResult = {
@@ -23,25 +30,98 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     const [isGpayInstalled, setIsGpayInstalled] = useState(false)
     const [isPhonePeInstalled, setIsPhonePeInstalled] = useState(false)
     const [isPaytmInstalled, setIsPaytmInstalled] = useState(false)
-    const [loadingState, setLoadingState] = useState(true)
+    const [loadingState, setLoadingState] = useState(false)
+    const [isFirstLoading, setIsFirstLoading] = useState(true)
+    const [timeRemaining, setTimeRemaining] = useState("");
     const [amount, setAmount] = useState("")
     const [totalItems, setTotalItems] = useState("")
     const [selectedIntent, setSelectedIntent] = useState("")
     const [primaryButtonColor, setPrimaryButtonColor] = useState("#1CA672")
+    const [email, setEmail] = useState("")
+    const [firstName, setFirstName] = useState("")
+    const [lastName, setLastName] = useState("")
+    const [phone, setPhone] = useState("")
+    const [uniqueRef, setUniqueRef] = useState("")
+    const [dob, setDob] = useState("")
+    const [pan, setpan] = useState("")
+    let timerInterval: NodeJS.Timeout
 
-    const handlePayment = () => {
+    const handlePayment = async () => {
+        setLoadingState(true)
+        const response = await upiPostRequest(
+            selectedIntent,
+            token,
+            email,
+            firstName,
+            lastName,
+            phone,
+            uniqueRef,
+            dob,
+            pan
+        )
+        try {
+            console.log(response)
+            setStatus(response.status.status)
+            setTransactionId(response.transactionId)
+            if (status === 'RequiresAction' && response.actions?.length > 0 && selectedIntent != "") {
+                urlToBase64(response.actions[0].url);
+            } else if (status === 'RequiresAction' && response.actions?.length > 0 && selectedIntent == "") {
+
+            } else if (['Failed', 'Rejected'].includes(status)) {
+                <PaymentFailed onClick={onExitCheckout} />
+            } else if (['Approved', 'Success'].includes(status)) {
+                <PaymentSuccess onClick={onExitCheckout} />
+            } else if (['Expired'].includes(status)) {
+                <SessionExpire onClick={onExitCheckout} />
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoadingState(false)
+        }
+    };
+
+
+    const urlToBase64 = (base64String: string) => {
+        try {
+            // Decode Base64 string to a normal string
+            const decodedString = atob(base64String);
+
+            // Decode URL
+            console.log(decodedString)
+            openPaymentApp(decodedString)
+        } catch (error) {
+            console.error('Error decoding Base64 URL:', error);
+        }
+    };
+
+    const openPaymentApp = async (url: string) => {
+        try {
+            if (await Linking.canOpenURL(url)) {
+                await Linking.openURL(url);
+            } else {
+                console.warn('Cannot open URL:', url);
+            }
+        } catch (error) {
+            console.error('Error opening URL:', error);
+        }
+    };
+
+
+    const onExitCheckout = () => {
+        clearInterval(timerInterval)
         const mockPaymentResult: PaymentResult = {
             status: status,
             transactionId: transactionId,
         };
         onPaymentResult(mockPaymentResult);
         return true
-    };
+    }
 
 
     useEffect(() => {
         // Add back press handler
-        const backHandler = BackHandler.addEventListener('hardwareBackPress', handlePayment);
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', onExitCheckout);
 
         // Cleanup the back press handler on component unmount
         return () => {
@@ -53,21 +133,37 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
         // Call the API to get payment methods
         const fetchPaymentMethods = async () => {
             try {
-                setLoadingState(true); // Set loading to true when API request starts
+                setIsFirstLoading(true); // Set loading to true when API request starts
                 const response = await axios.get(`https://test-apis.boxpay.tech/v0/checkout/sessions/${token}`);
                 const paymentMethods = response.data.configs.paymentMethods;
                 const amount = response.data.paymentDetails
+                console.log(response)
                 // Check if the UPI Intent is present in the paymentMethods array
                 const upiIntent = paymentMethods.find((method: any) => method.type === 'Upi' && method.brand === 'UpiIntent');
                 setIsUpiIntentVisible(upiIntent)
                 setAmount(`${amount.money.currencySymbol}${amount.money.amountLocaleFull}`)
                 setTotalItems(amount.order.items.length)
                 setPrimaryButtonColor(response.data.merchantDetails.checkoutTheme.primaryButtonColor)
-                
+                setEmail(amount.shopper.email)
+                setFirstName(amount.shopper.firstName)
+                setLastName(amount.shopper.lastName)
+                setPhone(amount.shopper.phoneNumber)
+                setUniqueRef(amount.shopper.uniqueReference)
+                setDob(amount.shopper.dateOfBirth)
+                setpan(amount.shopper.panNumber)
+                // startCountdown(response.data.sessionExpiryTimestamp)
+                const isInstalled = await Linking.canOpenURL("phonepe://")
+                const gpay = await Linking.canOpenURL("tez://")
+                setIsGpayInstalled(gpay)
+                console.log(gpay)
+                const paytm = await Linking.canOpenURL("paytm://")
+                setIsPaytmInstalled(paytm)
+                console.log(paytm)
+                setIsPhonePeInstalled(isInstalled)
             } catch (error) {
                 console.error('Error fetching payment methods:', error);
             } finally {
-                setLoadingState(false); // Set loading to false when API request is finished
+                setIsFirstLoading(false); // Set loading to false when API request is finished
             }
         };
 
@@ -76,18 +172,116 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
     const handleSelectedIntent = (selected: string) => {
         setSelectedIntent(selected)
+        if (selected == "") {
+            handlePayment()
+        }
+    }
+
+    function startCountdown(sessionExpiryTimestamp: string) {
+        if (sessionExpiryTimestamp === "") {
+            console.warn("Session expiry timestamp is empty");
+            return;
+        }
+
+        // Convert session expiry timestamp to a Date object
+        const trimmedTimestamp = sessionExpiryTimestamp.substring(0, 26) + "Z";
+        const expiryTime = new Date(trimmedTimestamp).getTime();
+        console.log(`Expiry Time in milliseconds: ${expiryTime}`);
+
+        // Get current time in milliseconds (UTC)
+        const currentTime = new Date().getTime();
+        console.log(`Current Time in milliseconds: ${currentTime}`);
+
+        const remainingTime = expiryTime - currentTime;
+
+        if (remainingTime <= 0) {
+            console.log("Session has expired");
+            clearInterval(timerInterval);
+            <SessionExpire onClick={onExitCheckout} /> // Call your expiration function here
+        }
+
+        // Convert milliseconds to hours, minutes, seconds
+        const hours = Math.floor((remainingTime / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((remainingTime / (1000 * 60)) % 60);
+        const seconds = Math.floor((remainingTime / 1000) % 60);
+
+        console.log(`Time left: ${hours}h ${minutes}m ${seconds}s`);
+
+        // If remaining time is greater than 0, start the countdown
+        if (remainingTime > 0) {
+            timerInterval = setInterval(() => {
+                const newRemainingTime = expiryTime - new Date().getTime();
+
+                if (newRemainingTime <= 0) {
+                    console.log("Session expired");
+                    clearInterval(timerInterval);
+                    // <SessionExpire onClick={onExitCheckout} /> // Call your expiration function here
+                }
+
+                // Convert new remaining time to hours, minutes, seconds
+                const hours = Math.floor((newRemainingTime / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((newRemainingTime / (1000 * 60)) % 60);
+                const seconds = Math.floor((newRemainingTime / 1000) % 60);
+
+                console.log(`Time left: ${hours}h ${minutes}m ${seconds}s`);
+            }, 1000);
+        }
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#F5F6FB", marginTop: 30 }}>
-            {loadingState ? (
-                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator size="large" color="#0000ff" />
+        <View style={{ flex: 1, backgroundColor: "#F5F6FB" }}>
+            {isFirstLoading ? (
+                <View style={{ flex: 1, backgroundColor: 'white' }}>
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 90, marginTop: 10 }}
+                    />
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 50, borderRadius: 10, marginTop: 30 }}
+                    />
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 50, borderRadius: 10, marginTop: 25 }}
+                    />
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 50, borderRadius: 10, marginTop: 25 }}
+                    />
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 50, borderRadius: 10, marginTop: 25 }}
+                    />
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 50, borderRadius: 10, marginTop: 25 }}
+                    />
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 50, borderRadius: 10, marginTop: 25 }}
+                    />
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 50, borderRadius: 10, marginTop: 25 }}
+                    />
+                    <ShimmerPlaceHolder
+                        visible={false}
+                        style={{ width: "100%", height: 50, borderRadius: 10, marginTop: 25 }}
+                    />
+                </View>
+            ) : loadingState ? (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <LottieView
+                        source={require('../../assets/animations/boxpayLogo.json')}
+                        autoPlay
+                        loop
+                        style={{ width: 80, height: 80 }}
+                    />
                     <Text>Loading...</Text>
                 </View>
             ) : (
                 <View style={{ flex: 1, backgroundColor: "#F5F6FB" }}>
-                    <Header onBackPress={handlePayment} items={totalItems} amount={amount} />
+                    <Header onBackPress={onExitCheckout} items={totalItems} amount={amount} />
 
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.addressText}>Pay by any UPI App</Text>
@@ -101,52 +295,58 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                     {isUpiIntentVisibile && (
                         <View style={styles.intentBackground}>
                             <View style={styles.upiIntentRow}>
-                                <View style={styles.intentContainer}>
-                                    <Pressable
-                                        style={[
-                                            styles.intentIconBorder,
-                                            selectedIntent === 'GPay' && {borderColor:primaryButtonColor,borderWidth: 2}
-                                        ]}
-                                        onPress={() => handleSelectedIntent("GPay")}
-                                    >
-                                        <Image
-                                            source={require("../../assets/images/gpay-icon.png")}
-                                            style={styles.intentIcon}
-                                        />
-                                    </Pressable>
-                                    <Text style={styles.intentTitle}>GPay</Text>
-                                </View>
-                                <View style={styles.intentContainer}>
-                                    <Pressable
-                                        style={[
-                                            styles.intentIconBorder,
-                                            selectedIntent === 'PhonePe' && {borderColor:primaryButtonColor,borderWidth: 2}
-                                        ]}
-                                        onPress={() => handleSelectedIntent("PhonePe")}
-                                    >
-                                        <Image
-                                            source={require("../../assets/images/phonepe-icon.png")}
-                                            style={styles.intentIcon}
-                                        />
-                                    </Pressable>
+                                {isGpayInstalled && (
+                                    <View style={styles.intentContainer}>
+                                        <Pressable
+                                            style={[
+                                                styles.intentIconBorder,
+                                                selectedIntent === 'GPay' && { borderColor: primaryButtonColor, borderWidth: 2 }
+                                            ]}
+                                            onPress={() => handleSelectedIntent("GPay")}
+                                        >
+                                            <Image
+                                                source={require("../../assets/images/gpay-icon.png")}
+                                                style={styles.intentIcon}
+                                            />
+                                        </Pressable>
+                                        <Text style={styles.intentTitle}>GPay</Text>
+                                    </View>
+                                )}
+                                {isPhonePeInstalled && (
+                                    <View style={styles.intentContainer}>
+                                        <Pressable
+                                            style={[
+                                                styles.intentIconBorder,
+                                                selectedIntent === 'PhonePe' && { borderColor: primaryButtonColor, borderWidth: 2 },
+                                            ]}
+                                            onPress={() => handleSelectedIntent("PhonePe")}
+                                        >
+                                            <Image
+                                                source={require("../../assets/images/phonepe-icon.png")}
+                                                style={styles.intentIcon}
+                                            />
+                                        </Pressable>
 
-                                    <Text style={styles.intentTitle}>PhonePe</Text>
-                                </View>
-                                <View style={styles.intentContainer}>
-                                    <Pressable
-                                        style={[
-                                            styles.intentIconBorder,
-                                            selectedIntent === 'Paytm' && {borderColor:primaryButtonColor,borderWidth: 2}
-                                        ]}
-                                        onPress={() => handleSelectedIntent("Paytm")}
-                                    >
-                                        <Image
-                                            source={require("../../assets/images/paytm-icon.png")}
-                                            style={{ height: 28, width: 42 }}
-                                        />
-                                    </Pressable>
-                                    <Text style={styles.intentTitle}>Paytm</Text>
-                                </View>
+                                        <Text style={styles.intentTitle}>PhonePe</Text>
+                                    </View>
+                                )}
+                                {isPaytmInstalled && (
+                                    <View style={styles.intentContainer}>
+                                        <Pressable
+                                            style={[
+                                                styles.intentIconBorder,
+                                                selectedIntent === 'PayTm' && { borderColor: primaryButtonColor, borderWidth: 2 }
+                                            ]}
+                                            onPress={() => handleSelectedIntent("PayTm")}
+                                        >
+                                            <Image
+                                                source={require("../../assets/images/paytm-icon.png")}
+                                                style={{ height: 28, width: 42 }}
+                                            />
+                                        </Pressable>
+                                        <Text style={styles.intentTitle}>PayTm</Text>
+                                    </View>
+                                )}
                                 <View style={styles.intentContainer}>
                                     <Pressable style={styles.intentIconBorder} onPress={() => handleSelectedIntent("")}>
                                         <Image
@@ -159,7 +359,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                             </View>
 
                             {selectedIntent !== "" && (
-                                <Pressable style={[styles.buttonContainer,{backgroundColor:primaryButtonColor}]} onPress={handlePayment}>
+                                <Pressable style={[styles.buttonContainer, { backgroundColor: primaryButtonColor }]} onPress={handlePayment}>
                                     <Text style={styles.buttonText}>Pay {amount} via {selectedIntent}</Text>
                                 </Pressable>
                             )}
@@ -169,8 +369,6 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             )}
         </View>
     );
-
-
 };
 
 export default BoxpayCheckout;
@@ -186,7 +384,6 @@ const styles = StyleSheet.create({
     upiIntentRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
         marginHorizontal: 16
     },
     intentIcon: {
@@ -205,6 +402,7 @@ const styles = StyleSheet.create({
     },
     intentContainer: {
         alignItems: 'center',
+        marginEnd:20
     },
     intentTitle: {
         color: "#363840",

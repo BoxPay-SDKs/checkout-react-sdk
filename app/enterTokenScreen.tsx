@@ -6,7 +6,7 @@ const EnterTokenScreen = () => {
   return (
     <View style={styles.container}>
       <Text>enterTokenScreen</Text>
-      <Link href={"/(boxpayCheckout)"} style = {{fontSize:40}}>BoxpayCheckout</Link>
+      <Link href={"/(boxpayCheckout)/components/paymentFailed"} style = {{fontSize:40}}>BoxpayCheckout</Link>
     </View>
   )
 }
