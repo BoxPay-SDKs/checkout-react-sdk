@@ -4,10 +4,11 @@ import Modal from 'react-native-modal'
 import LottieView from 'lottie-react-native'
 
 interface PaymentSuccessProps {
-    onClick:()=> void
+    onClick:()=> void,
+    buttonColor:string
 }
 
-const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick }) => {
+const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick, buttonColor }) => {
     return (
         <View style={styles.container}>
 
@@ -51,7 +52,7 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick }) => {
                             color: '#4F4D55', alignSelf: 'center', paddingBottom: 16, paddingTop: 12
                         }}
                     >You will be redirected to the merchant's page</Text>
-                    <Pressable style={[styles.buttonContainer]} onPress={onClick}>
+                    <Pressable style={[styles.buttonContainer,{backgroundColor:buttonColor}]} onPress={onClick}>
                         <Text style={styles.buttonText}>Done</Text>
                     </Pressable>
                 </View>

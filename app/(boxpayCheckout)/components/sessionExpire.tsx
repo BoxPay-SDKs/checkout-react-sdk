@@ -4,10 +4,11 @@ import Modal from 'react-native-modal'
 import LottieView from 'lottie-react-native'
 
 interface SessionExpireProps {
-    onClick:()=> void
+    onClick:()=> void,
+    buttonColor:string
 }
 
-const SessionExpire: React.FC<SessionExpireProps> = ({ onClick }) => {
+const SessionExpire: React.FC<SessionExpireProps> = ({ onClick , buttonColor}) => {
     return (
         <View style={styles.container}>
 
@@ -24,7 +25,7 @@ const SessionExpire: React.FC<SessionExpireProps> = ({ onClick }) => {
                     />
                     <Text style={styles.successfulHeading}>Payment session has expired.</Text>
                     <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' , textAlign:'center', alignSelf:'center', paddingTop:8, paddingBottom:16, lineHeight:20}}>For your security, your session has expired due to inactivity. Please restart the payment process.</Text>
-                    <Pressable style={[styles.buttonContainer]} onPress={onClick}>
+                    <Pressable style={[styles.buttonContainer, {backgroundColor:buttonColor}]} onPress={onClick}>
                         <Text style={styles.buttonText}>Go back to Home</Text>
                     </Pressable>
                 </View>

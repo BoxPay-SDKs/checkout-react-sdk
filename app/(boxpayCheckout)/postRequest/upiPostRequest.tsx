@@ -19,7 +19,7 @@ const upiPostRequest = async (
       screenHeight: Constants.platform?.ios?.screenHeight || Constants.platform?.android?.screenHeight || 0,
       screenWidth: Constants.platform?.ios?.screenWidth || Constants.platform?.android?.screenWidth || 0,
       acceptHeader: "application/json",
-      userAgentHeader: Constants.manifest?.extra?.userAgent || "Expo App",
+      userAgentHeader: "Expo App",
       browserLanguage: "en_US",
       ipAddress: "null",
       colorDepth: 24,

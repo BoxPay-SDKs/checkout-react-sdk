@@ -35,7 +35,7 @@ const Check = () => {
   };
 
   return (
-    <View style={{ flex: 1,backgroundColor:'white' }}>
+    <View style={{ flex: 1,backgroundColor:'white', paddingTop:30 }}>
       {token ? (
         // Render BoxpayCheckout when token is available
         <BoxpayCheckout
@@ -43,7 +43,7 @@ const Check = () => {
           onPaymentResult={handlePaymentResult} 
         />
       ) : (
-        <Text>{error ? `Error: ${error}` : 'Loading token...'}</Text>
+        <Text style={{alignSelf:'center', justifyContent:'center'}}>{error ? `Error: ${error}` : 'Loading token...'}</Text>
       )}
     </View>
   );
