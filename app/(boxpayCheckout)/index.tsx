@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable, BackHandler, ToastAndroid, AppState } from 'react-native';
 import Header from './components/header';
 import axios from 'axios';
@@ -35,7 +35,6 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     const [isPaytmInstalled, setIsPaytmInstalled] = useState(false)
     const [loadingState, setLoadingState] = useState(false)
     const [isFirstLoading, setIsFirstLoading] = useState(true)
-    const [timeRemaining, setTimeRemaining] = useState("");
     const [amount, setAmount] = useState("")
     const [totalItems, setTotalItems] = useState("")
     const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
@@ -49,6 +48,8 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     const [pan, setpan] = useState("")
     const [failedModalOpen, setFailedModalState] = useState(false)
     const [successModalOpen, setSuccessModalState] = useState(false)
+    const lastOpenendUrl = useRef<string>("")
+    const paymentFailedMessage = useRef<string>("")
     const [sessionExpireModalOpen, setSessionExppireModalState] = useState(false)
     let timerInterval: NodeJS.Timeout
     let backgroundApiInterval: NodeJS.Timeout;
@@ -68,11 +69,18 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             pan
         )
         try {
+            console.log(response)
             setStatus(response.status.status)
             setTransactionId(response.transactionId)
+            const reason = response.status.statusReason
+            const reasonCode = response.status.reasonCode
             if (response.status.status === 'RequiresAction' && response.actions?.length > 0) {
                 urlToBase64(response.actions[0].url);
-            }  else if (['FAILED', 'REJECTED'].includes(response.status.status)) {
+            } else if (['FAILED', 'REJECTED'].includes(response.status.status)) {
+                paymentFailedMessage.current = reason.substringAfter(":")
+                if (!reasonCode.startsWith("uf", true)) {
+                    paymentFailedMessage.current ="You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+                }
                 setFailedModalState(true)
                 setLoadingState(false)
             } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(response.status.status)) {
@@ -91,8 +99,8 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
     const urlToBase64 = (base64String: string) => {
         try {
-            // Decode Base64 string to a normal string
             const decodedString = atob(base64String);
+            lastOpenendUrl.current = decodedString
             openUPIIntent(decodedString)
         } catch (error) {
             setFailedModalState(true)
@@ -102,15 +110,9 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
     const openUPIIntent = async (url: string) => {
         try {
-            const canOpen = await Linking.canOpenURL(url);
-            if (canOpen) {
-                await Linking.openURL(url);  // Open the UPI app
-                AppState.addEventListener('change', handleAppStateChange)
-            } else {
-                console.log(`cant open the file ${url}`)
-                setFailedModalState(true)
-                setLoadingState(false)
-            }
+            console.log(url)
+            await Linking.openURL(url);  // Open the UPI app
+            AppState.addEventListener('change', handleAppStateChange)
         } catch (error) {
             setFailedModalState(true)
             setLoadingState(false)
@@ -119,6 +121,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
     const handleAppStateChange = (nextAppState: string) => {
         if (nextAppState === 'background') {
+            console.log('Last opened URL:', lastOpenendUrl.current);
             startBackgroundApiTask();
         }
     };
@@ -140,7 +143,28 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
         if (appState == 'active') {
             setStatus(response.status)
             setTransactionId(response.transactionId)
-            if (['FAILED', 'REJECTED', 'PENDING'].includes(response.status)) {
+            const reason = response.statusReason
+            const reasonCode = response.reasonCode
+            if(['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("tez:")) {
+                paymentFailedMessage.current ="Payment failed with GPay. Please retry payment with a different UPI app"
+                setFailedModalState(true)
+            } else if(['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("phonepe:")) {
+                paymentFailedMessage.current ="Payment failed with PhonePe. Please retry payment with a different UPI app"
+                setFailedModalState(true)
+            } else if(['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("paytmmp:")) {
+                paymentFailedMessage.current ="Payment failed with PayTm. Please retry payment with a different UPI app"
+                setFailedModalState(true)
+            } else if(['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("upi:")) {
+                paymentFailedMessage.current ="You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+                setFailedModalState(true)
+            } else if(['PENDING'].includes(response.status)) {
+                paymentFailedMessage.current ="You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+                setFailedModalState(true)
+            } else if (['FAILED', 'REJECTED'].includes(response.status)) {
+                paymentFailedMessage.current =reason.substringAfter(":")
+                if (!reasonCode.startsWith("uf", true)) {
+                    paymentFailedMessage.current ="You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+                }
                 setFailedModalState(true)
             } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(response.status)) {
                 setSuccessModalState(true)
@@ -315,7 +339,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                                         >
                                             <Image
                                                 source={require("../../assets/images/paytm-icon.png")}
-                                                style={{ height: 28, width: 42 }}
+                                                style={{ height: 28, width: 44 }}
                                             />
                                         </Pressable>
                                         <Text style={styles.intentTitle}>PayTm</Text>
@@ -348,6 +372,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                 <PaymentFailed
                     onClick={() => setFailedModalState(false)}
                     buttonColor={primaryButtonColor}
+                    errorMessage={paymentFailedMessage.current}
                 />
             )}
 
@@ -380,17 +405,15 @@ const styles = StyleSheet.create({
     },
     upiIntentRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginHorizontal: 16
+        alignItems: 'center'
     },
     intentIcon: {
-        height: 28,
-        width: 28,
-        padding: 13
+        height: 34,
+        width: 34
     },
     intentIconBorder: {
-        height: 52,
-        width: 52,
+        height: 56,
+        width: 56,
         borderWidth: 1,
         borderColor: "#DCDEE3",
         borderRadius: 6,
@@ -398,8 +421,7 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     intentContainer: {
-        alignItems: 'center',
-        marginEnd: 20
+        marginEnd: 22
     },
     intentTitle: {
         color: "#363840",
@@ -408,9 +430,8 @@ const styles = StyleSheet.create({
     intentBackground: {
         marginHorizontal: 16,
         marginVertical: 8,
-        padding: 12,
+        padding: 16,
         backgroundColor: "white",
-        alignSelf: "stretch",
         flexDirection: 'column',
         borderRadius: 12,
     },
@@ -418,8 +439,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderRadius: 8,
         justifyContent: 'center',
-        marginTop: 12,
-        marginHorizontal: 16
+        marginTop: 20
     },
     buttonText: {
         color: 'white',

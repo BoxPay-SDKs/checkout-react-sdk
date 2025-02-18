@@ -5,9 +5,10 @@ import LottieView from 'lottie-react-native'
 
 interface PaymentFailedProps {
     onClick:()=> void,
-    buttonColor :string
+    buttonColor :string,
+    errorMessage:string
 }
-const PaymentFailed: React.FC<PaymentFailedProps> = ({ onClick, buttonColor }) => {
+const PaymentFailed: React.FC<PaymentFailedProps> = ({ onClick, buttonColor , errorMessage}) => {
     return (
         <View style={styles.container}>
 
@@ -23,7 +24,7 @@ const PaymentFailed: React.FC<PaymentFailedProps> = ({ onClick, buttonColor }) =
                         style={{ width: 90, height: 90, alignSelf: 'center' }}
                     />
                     <Text style={styles.successfulHeading}>Payment Failed</Text>
-                    <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' , textAlign:'center', alignSelf:'center', paddingTop:8, paddingBottom:16, lineHeight:20}}>You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods.</Text>
+                    <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' , textAlign:'center', alignSelf:'center', paddingTop:8, paddingBottom:16, lineHeight:20}}>{errorMessage}</Text>
                     <Pressable style={[styles.buttonContainer,{backgroundColor:buttonColor}]} onPress={onClick}>
                         <Text style={styles.buttonText}>Return to Payment Options</Text>
                     </Pressable>
