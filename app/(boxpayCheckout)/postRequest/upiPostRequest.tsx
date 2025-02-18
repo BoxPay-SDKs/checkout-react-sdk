@@ -53,7 +53,6 @@ const upiPostRequest = async (
 
   const API_URL = `https://test-apis.boxpay.tech/v0/checkout/sessions/${token}`;
   try {
-    console.log(requestBody)
     const response = await axios.post(API_URL, requestBody, {
       headers: {
         'X-Request-Id':generateRandomAlphanumericString(10),
@@ -63,7 +62,6 @@ const upiPostRequest = async (
     const data = await response.data;
     return data;
   } catch (error) {
-    console.error("API Error:", error);
     return { error: "API request failed" };
   }
 

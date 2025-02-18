@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   headerTitleRow: { flexDirection: "row", alignItems: "center" },
   headerColumn: { flex: 1 },
   backArrow: { height: 28, width: 28, marginRight: 8 },
-  headerTitle: { fontSize: 18, color: "#363840", fontWeight: "800" },
+  headerTitle: { fontSize: 18, color: "#363840", fontWeight: "900" },
   headerDesc: { fontSize: 14, color: "#4F4D55", fontWeight: "400" },
   headerSecure: {
     flexDirection: "row",

@@ -12,6 +12,7 @@ import PaymentFailed from './components/paymentFailed';
 import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
 import { IntentAction } from 'react-native-launcher-kit';
 import fetchStatus from './postRequest/fetchStatus';
+import UpiScreen from './screens/upiScreen';
 
 // Define the PaymentResult type (you can adjust it as per your actual result structure)
 type PaymentResult = {
@@ -29,6 +30,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     const [status, setStatus] = useState("NoAction")
     const [transactionId, setTransactionId] = useState("")
     const [isUpiIntentVisibile, setIsUpiIntentVisible] = useState(false)
+    const [isUpiCollectVisible, setisUpiCollectVisible] = useState(false)
     const [appState, setAppState] = useState(AppState.currentState);
     const [isGpayInstalled, setIsGpayInstalled] = useState(false)
     const [isPhonePeInstalled, setIsPhonePeInstalled] = useState(false)
@@ -69,7 +71,6 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             pan
         )
         try {
-            console.log(response)
             setStatus(response.status.status)
             setTransactionId(response.transactionId)
             const reason = response.status.statusReason
@@ -79,7 +80,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             } else if (['FAILED', 'REJECTED'].includes(response.status.status)) {
                 paymentFailedMessage.current = reason.substringAfter(":")
                 if (!reasonCode.startsWith("uf", true)) {
-                    paymentFailedMessage.current ="You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+                    paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
                 }
                 setFailedModalState(true)
                 setLoadingState(false)
@@ -110,7 +111,6 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
     const openUPIIntent = async (url: string) => {
         try {
-            console.log(url)
             await Linking.openURL(url);  // Open the UPI app
             AppState.addEventListener('change', handleAppStateChange)
         } catch (error) {
@@ -121,7 +121,6 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
     const handleAppStateChange = (nextAppState: string) => {
         if (nextAppState === 'background') {
-            console.log('Last opened URL:', lastOpenendUrl.current);
             startBackgroundApiTask();
         }
     };
@@ -145,25 +144,25 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             setTransactionId(response.transactionId)
             const reason = response.statusReason
             const reasonCode = response.reasonCode
-            if(['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("tez:")) {
-                paymentFailedMessage.current ="Payment failed with GPay. Please retry payment with a different UPI app"
+            if (['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("tez:")) {
+                paymentFailedMessage.current = "Payment failed with GPay. Please retry payment with a different UPI app"
                 setFailedModalState(true)
-            } else if(['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("phonepe:")) {
-                paymentFailedMessage.current ="Payment failed with PhonePe. Please retry payment with a different UPI app"
+            } else if (['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("phonepe:")) {
+                paymentFailedMessage.current = "Payment failed with PhonePe. Please retry payment with a different UPI app"
                 setFailedModalState(true)
-            } else if(['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("paytmmp:")) {
-                paymentFailedMessage.current ="Payment failed with PayTm. Please retry payment with a different UPI app"
+            } else if (['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("paytmmp:")) {
+                paymentFailedMessage.current = "Payment failed with PayTm. Please retry payment with a different UPI app"
                 setFailedModalState(true)
-            } else if(['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("upi:")) {
-                paymentFailedMessage.current ="You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+            } else if (['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("upi:")) {
+                paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
                 setFailedModalState(true)
-            } else if(['PENDING'].includes(response.status)) {
-                paymentFailedMessage.current ="You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+            } else if (['PENDING'].includes(response.status)) {
+                paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
                 setFailedModalState(true)
             } else if (['FAILED', 'REJECTED'].includes(response.status)) {
-                paymentFailedMessage.current =reason.substringAfter(":")
+                paymentFailedMessage.current = reason.substringAfter(":")
                 if (!reasonCode.startsWith("uf", true)) {
-                    paymentFailedMessage.current ="You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+                    paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
                 }
                 setFailedModalState(true)
             } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(response.status)) {
@@ -197,23 +196,22 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     useEffect(() => {
         const fetchPaymentMethods = async () => {
             try {
-                setIsFirstLoading(true); // Set loading to true when API request starts
+                setIsFirstLoading(true); 
                 const response = await axios.get(`https://test-apis.boxpay.tech/v0/checkout/sessions/${token}`);
                 const paymentMethods = response.data.configs.paymentMethods;
-                const amount = response.data.paymentDetails
-                console.log(response)
-                const upiIntent = paymentMethods.find((method: any) => method.type === 'Upi' && method.brand === 'UpiIntent');
-                setIsUpiIntentVisible(upiIntent)
-                setAmount(`${amount.money.currencySymbol}${amount.money.amountLocaleFull}`)
-                setTotalItems(amount.order.items.length)
+                const paymentDetails = response.data.paymentDetails
+                setIsUpiIntentVisible(paymentMethods.find((method: any) => method.type === 'Upi' && method.brand === 'UpiIntent'))
+                setisUpiCollectVisible(paymentMethods.find((method: any) => method.type === 'Upi' && method.brand === 'UpiCollect'))
+                setAmount(`${paymentDetails.money.currencySymbol}${paymentDetails.money.amountLocaleFull}`)
+                setTotalItems(paymentDetails.order.items.length)
                 setPrimaryButtonColor(response.data.merchantDetails.checkoutTheme.primaryButtonColor)
-                setEmail(amount.shopper.email)
-                setFirstName(amount.shopper.firstName)
-                setLastName(amount.shopper.lastName)
-                setPhone(amount.shopper.phoneNumber)
-                setUniqueRef(amount.shopper.uniqueReference)
-                setDob(amount.shopper.dateOfBirth)
-                setpan(amount.shopper.panNumber)
+                setEmail(paymentDetails.shopper.email)
+                setFirstName(paymentDetails.shopper.firstName)
+                setLastName(paymentDetails.shopper.lastName)
+                setPhone(paymentDetails.shopper.phoneNumber)
+                setUniqueRef(paymentDetails.shopper.uniqueReference)
+                setDob(paymentDetails.shopper.dateOfBirth)
+                setpan(paymentDetails.shopper.panNumber)
                 startCountdown(response.data.sessionExpiryTimestamp)
                 const isInstalled = await Linking.canOpenURL("phonepe://")
                 const gpay = await Linking.canOpenURL("tez://upi/")
@@ -223,7 +221,6 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                 setIsPhonePeInstalled(isInstalled)
             } catch (error) {
                 ToastAndroid.show('Internal server occured', ToastAndroid.SHORT);
-                console.error('Error fetching payment methods:', error);
             } finally {
                 setIsFirstLoading(false); // Set loading to false when API request is finished
             }
@@ -247,15 +244,12 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
         timerInterval = setInterval(() => {
             const currentTimeIST = new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000);
-            // console.log(currentTimeIST)
             const timeDiff = expiryTimeIST.getTime() - currentTimeIST.getTime();
             if (timeDiff <= 0) {
                 clearInterval(timerInterval);
                 setStatus('EXPIRED')
                 setSessionExppireModalState(true)
             }
-
-            // // // Convert new remaining time to hours, minutes, seconds
             // const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
             // const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
             // const seconds = Math.floor((timeDiff / 1000) % 60);
@@ -271,6 +265,8 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                     <ShimmerPlaceHolder visible={false} style={{ width: '100%', height: 90, marginTop: 10 }} />
                     <ShimmerPlaceHolder visible={false} style={{ width: '100%', height: 50, borderRadius: 10, marginTop: 30 }} />
                     <ShimmerPlaceHolder visible={false} style={{ width: '100%', height: 50, borderRadius: 10, marginTop: 25 }} />
+                    <ShimmerPlaceHolder visible={false} style={{ width: '100%', height: 50, borderRadius: 10, marginTop: 25 }} />
+                    <ShimmerPlaceHolder visible={false} style={{ width: '100%', height: 50, borderRadius: 10, marginTop: 25 }} />
                 </View>
             ) : loadingState ? (
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -282,88 +278,19 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                     {/* Main UI Content */}
                     <Header onBackPress={onExitCheckout} items={totalItems} amount={amount} />
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={styles.addressText}>Pay by any UPI App</Text>
-                        <Image
-                            source={require("../../assets/images/upi-icon.png")}
-                            style={{ height: 28, width: 54, marginTop: 12, marginStart: 4 }}
-                        />
-                    </View>
-
-                    {isUpiIntentVisibile && (
-                        <View style={styles.intentBackground}>
-                            <View style={styles.upiIntentRow}>
-                                {isGpayInstalled && (
-                                    <View style={styles.intentContainer}>
-                                        <Pressable
-                                            style={[
-                                                styles.intentIconBorder,
-                                                selectedIntent === 'GPay' && { borderColor: primaryButtonColor, borderWidth: 2 }
-                                            ]}
-                                            onPress={() => setSelectedIntent("GPay")}
-                                        >
-                                            <Image
-                                                source={require("../../assets/images/gpay-icon.png")}
-                                                style={styles.intentIcon}
-                                            />
-                                        </Pressable>
-                                        <Text style={styles.intentTitle}>GPay</Text>
-                                    </View>
-                                )}
-                                {isPhonePeInstalled && (
-                                    <View style={styles.intentContainer}>
-                                        <Pressable
-                                            style={[
-                                                styles.intentIconBorder,
-                                                selectedIntent === 'PhonePe' && { borderColor: primaryButtonColor, borderWidth: 2 },
-                                            ]}
-                                            onPress={() => setSelectedIntent("PhonePe")}
-                                        >
-                                            <Image
-                                                source={require("../../assets/images/phonepe-icon.png")}
-                                                style={styles.intentIcon}
-                                            />
-                                        </Pressable>
-
-                                        <Text style={styles.intentTitle}>PhonePe</Text>
-                                    </View>
-                                )}
-                                {isPaytmInstalled && (
-                                    <View style={styles.intentContainer}>
-                                        <Pressable
-                                            style={[
-                                                styles.intentIconBorder,
-                                                selectedIntent === 'PayTm' && { borderColor: primaryButtonColor, borderWidth: 2 }
-                                            ]}
-                                            onPress={() => setSelectedIntent("PayTm")}
-                                        >
-                                            <Image
-                                                source={require("../../assets/images/paytm-icon.png")}
-                                                style={{ height: 28, width: 44 }}
-                                            />
-                                        </Pressable>
-                                        <Text style={styles.intentTitle}>PayTm</Text>
-                                    </View>
-                                )}
-                                <View style={styles.intentContainer}>
-                                    <Pressable style={styles.intentIconBorder} onPress={() => setSelectedIntent("")}>
-                                        <Image
-                                            source={require("../../assets/images/other-intent-icon.png")}
-                                            style={styles.intentIcon}
-                                        />
-                                    </Pressable>
-                                    <Text style={styles.intentTitle}>Others</Text>
-                                </View>
-                            </View>
-
-                            {(selectedIntent !== null && selectedIntent !== "") && (
-                                <Pressable style={[styles.buttonContainer, { backgroundColor: primaryButtonColor }]} onPress={handlePayment}>
-                                    <Text style={styles.buttonText}>Pay {amount} via {selectedIntent}</Text>
-                                </Pressable>
-                            )}
-
-                        </View>
-                    )}
+                    <UpiScreen
+                        selectedColor={primaryButtonColor}
+                        isUpiIntentVisible={isUpiIntentVisibile}
+                        isGpayVisible={isGpayInstalled}
+                        isPaytmVisible={isPaytmInstalled}
+                        isPhonePeVisible={isPhonePeInstalled}
+                        isUpiCollectVisible={isUpiCollectVisible}
+                        selectedIntent={selectedIntent}
+                        setSelectedIntent={(it) => setSelectedIntent(it)}
+                        amount={amount}
+                        handleUpiPayment={handlePayment}
+                        handleCollectPayment={(it)=> {console.log(it)}}
+                    />
                 </View>
             )}
 
@@ -396,55 +323,5 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 export default BoxpayCheckout;
 
 const styles = StyleSheet.create({
-    addressText: {
-        marginStart: 16,
-        marginTop: 12,
-        fontWeight: '800',
-        fontSize: 16,
-        color: '#020815B5'
-    },
-    upiIntentRow: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    intentIcon: {
-        height: 34,
-        width: 34
-    },
-    intentIconBorder: {
-        height: 56,
-        width: 56,
-        borderWidth: 1,
-        borderColor: "#DCDEE3",
-        borderRadius: 6,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    intentContainer: {
-        marginEnd: 22
-    },
-    intentTitle: {
-        color: "#363840",
-        fontSize: 14
-    },
-    intentBackground: {
-        marginHorizontal: 16,
-        marginVertical: 8,
-        padding: 16,
-        backgroundColor: "white",
-        flexDirection: 'column',
-        borderRadius: 12,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        borderRadius: 8,
-        justifyContent: 'center',
-        marginTop: 20
-    },
-    buttonText: {
-        color: 'white',
-        fontWeight: '600',
-        fontSize: 16,
-        paddingVertical: 12
-    }
+
 });
