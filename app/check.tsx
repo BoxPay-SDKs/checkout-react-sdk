@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import BoxpayCheckout from '../app/(boxpayCheckout)/index';  // Import the SDK component
 import { useNavigation } from 'expo-router';
+import { SharedContextProvider } from './(boxpayCheckout)/sharedContent/sharedContext';
 
 const Check = () => {
   const navigation = useNavigation()
@@ -14,6 +15,7 @@ const Check = () => {
     try {
       const result = await fetchToken();  // Get the token
       setToken(result.token); // Set the token in state
+      console.log((result.token))
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message); // Set the error message in state if the API call fails
@@ -21,7 +23,7 @@ const Check = () => {
         setError('An unknown error occurred'); // Handle case where err is not an instance of Error
       }
     }
-    
+
   };
 
   useEffect(() => {
@@ -35,15 +37,17 @@ const Check = () => {
   };
 
   return (
-    <View style={{ flex: 1,backgroundColor:'white', paddingTop:30 }}>
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
       {token ? (
         // Render BoxpayCheckout when token is available
+        // <SharedContextProvider>
         <BoxpayCheckout
-          token={token} 
-          onPaymentResult={handlePaymentResult} 
+          token={token}
+          onPaymentResult={handlePaymentResult}
         />
+        // </SharedContextProvider>
       ) : (
-        <Text style={{alignSelf:'center', justifyContent:'center'}}>{error ? `Error: ${error}` : 'Loading token...'}</Text>
+        <Text style={{ alignSelf: 'center', justifyContent: 'center', paddingTop: 100 }}>{error ? `Error: ${error}` : 'Loading token...'}</Text>
       )}
     </View>
   );

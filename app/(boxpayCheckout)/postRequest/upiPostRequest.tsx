@@ -4,7 +4,6 @@ import Constants from "expo-constants";
 import axios from 'axios';
 
 const upiPostRequest = async (
-    upiIntent: string, 
     token: string,
     email:string,
     firstName:string,
@@ -12,7 +11,8 @@ const upiPostRequest = async (
     phone:string,
     uniqueRef:string,
     dob:string,
-    pan:string
+    pan:string,
+    instrumentDetails:Record<string, any>
 ) => {
   const requestBody = {
     browserData: {
@@ -27,10 +27,7 @@ const upiPostRequest = async (
       timeZoneOffSet: new Date().getTimezoneOffset(),
       packageId: Constants.manifest?.id || "com.boxpay.checkout.demoapp",
     },
-    instrumentDetails: {
-      type: "upi/intent",
-      ...(upiIntent && { upiAppDetails: { upiApp: upiIntent } }) // Conditionally add upiAppDetails only if upiIntent is present
-    },
+    instrumentDetails,
     shopper: {
       email,
       firstName,

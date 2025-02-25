@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Image, Pressable, BackHandler, ToastAndroid, AppState } from 'react-native';
+import { View, Text, StyleSheet, BackHandler, ToastAndroid, AppState } from 'react-native';
 import Header from './components/header';
 import axios from 'axios';
 import upiPostRequest from './postRequest/upiPostRequest';
@@ -10,15 +10,18 @@ import PaymentSuccess from './components/paymentSuccess';
 import SessionExpire from './components/sessionExpire';
 import PaymentFailed from './components/paymentFailed';
 import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
-import { IntentAction } from 'react-native-launcher-kit';
 import fetchStatus from './postRequest/fetchStatus';
 import UpiScreen from './screens/upiScreen';
+import { router } from 'expo-router';
+import { useSharedContext } from './sharedContent/sharedContext';
 
 // Define the PaymentResult type (you can adjust it as per your actual result structure)
-type PaymentResult = {
-    status: String;
-    transactionId: string
+// types.ts
+export type PaymentResult = {
+    status: string;  // Use lowercase `string`, not `String`
+    transactionId: string;
 };
+
 
 // Define the props interface
 interface BoxpayCheckoutProps {
@@ -27,11 +30,12 @@ interface BoxpayCheckoutProps {
 }
 
 const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult }) => {
-    const [status, setStatus] = useState("NoAction")
-    const [transactionId, setTransactionId] = useState("")
+    const { status, setStatus, transactionId, setTransactionId } = useSharedContext()
+    // const [status, setStatus] = useState("")
+    // const [transactionId, setTransactionId] = useState("")
     const [isUpiIntentVisibile, setIsUpiIntentVisible] = useState(false)
     const [isUpiCollectVisible, setisUpiCollectVisible] = useState(false)
-    const [appState, setAppState] = useState(AppState.currentState);
+    const [appState] = useState(AppState.currentState);
     const [isGpayInstalled, setIsGpayInstalled] = useState(false)
     const [isPhonePeInstalled, setIsPhonePeInstalled] = useState(false)
     const [isPaytmInstalled, setIsPaytmInstalled] = useState(false)
@@ -51,16 +55,16 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     const [failedModalOpen, setFailedModalState] = useState(false)
     const [successModalOpen, setSuccessModalState] = useState(false)
     const lastOpenendUrl = useRef<string>("")
-    const paymentFailedMessage = useRef<string>("")
+    const paymentFailedMessage = useRef<string>("You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods.")
     const [sessionExpireModalOpen, setSessionExppireModalState] = useState(false)
-    let timerInterval: NodeJS.Timeout
+    const [successfulTimeStamp, setSuccessfulTimeStamp] = useState("")
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
     let backgroundApiInterval: NodeJS.Timeout;
 
 
-    const handlePayment = async () => {
+    const handlePaymentIntent = async () => {
         setLoadingState(true)
         const response = await upiPostRequest(
-            selectedIntent ? selectedIntent : "",
             token,
             email,
             firstName,
@@ -68,26 +72,32 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             phone,
             uniqueRef,
             dob,
-            pan
+            pan,
+            {
+                type: "upi/intent",
+                ...(selectedIntent && { upiAppDetails: { upiApp: selectedIntent } }) // Conditionally add upiAppDetails only if upiIntent is present
+            }
         )
         try {
             setStatus(response.status.status)
             setTransactionId(response.transactionId)
             const reason = response.status.statusReason
             const reasonCode = response.status.reasonCode
-            if (response.status.status === 'RequiresAction' && response.actions?.length > 0) {
+            const status = response.status.status.toUpperCase()
+            if (status === 'REQUIRESACTION' && response.actions?.length > 0) {
                 urlToBase64(response.actions[0].url);
-            } else if (['FAILED', 'REJECTED'].includes(response.status.status)) {
+            } else if (['FAILED', 'REJECTED'].includes(status)) {
                 paymentFailedMessage.current = reason.substringAfter(":")
                 if (!reasonCode.startsWith("uf", true)) {
                     paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
                 }
                 setFailedModalState(true)
                 setLoadingState(false)
-            } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(response.status.status)) {
+            } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(status)) {
+                setSuccessfulTimeStamp(response.transactionTimestampLocale)
                 setSuccessModalState(true)
                 setLoadingState(false)
-            } else if (['EXPIRED'].includes(response.status.status)) {
+            } else if (['EXPIRED'].includes(status)) {
                 setSessionExppireModalState(true)
                 setLoadingState(false)
             }
@@ -96,6 +106,70 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             setLoadingState(false)
         }
     };
+
+    const handleUpiCollectPayment = async (upiId: string) => {
+        setLoadingState(true)
+        const response = await upiPostRequest(
+            token,
+            email,
+            firstName,
+            lastName,
+            phone,
+            uniqueRef,
+            dob,
+            pan,
+            {
+                type: "upi/collect",
+                upi: {
+                    shopperVpa: upiId
+                }
+            }
+        )
+        try {
+            console.log(response)
+            setStatus(response.status.status)
+            setTransactionId(response.transactionId)
+            const reason = response.status.statusReason
+            const reasonCode = response.status.reasonCode
+            const status = response.status.status.toUpperCase()
+            console.log(status)
+            if (status === 'REQUIRESACTION') {
+                navigateToUpiTimerModal(upiId)
+            } else if (['FAILED', 'REJECTED'].includes(status)) {
+                paymentFailedMessage.current = reason.substringAfter(":")
+                if (!reasonCode.startsWith("uf", true)) {
+                    paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+                }
+                setFailedModalState(true)
+                setLoadingState(false)
+            } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(status)) {
+                setSuccessfulTimeStamp(response.transactionTimestampLocale)
+                setSuccessModalState(true)
+                setLoadingState(false)
+            } else if (['EXPIRED'].includes(status)) {
+                setSessionExppireModalState(true)
+                setLoadingState(false)
+            }
+        } catch (error) {
+            setFailedModalState(true)
+            setLoadingState(false)
+        }
+    };
+
+    const navigateToUpiTimerModal = (upiId: string) => {
+        setLoadingState(false)
+        router.push({
+            pathname: "/screens/upiTimerScreen",
+            params: {
+                amount: amount,
+                token: token,
+                itemsLength: totalItems,
+                upiId: upiId,
+                brandColor: primaryButtonColor,
+                onPaymentResult: onPaymentResult.toString(),
+            }
+        })
+    }
 
 
     const urlToBase64 = (base64String: string) => {
@@ -137,51 +211,70 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
         }
     };
 
+    const stopExpireTimerCountDown = () => {
+        console.log(timerRef.current)
+        if (timerRef.current) {
+            console.log("timer stopped")
+            clearInterval(timerRef.current)
+        }
+    }
+
     const callFetchStatusApi = async () => {
         const response = await fetchStatus(token)
+        console.log(response)
         if (appState == 'active') {
             setStatus(response.status)
             setTransactionId(response.transactionId)
             const reason = response.statusReason
             const reasonCode = response.reasonCode
-            if (['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("tez:")) {
+            const status = response.status.toUpperCase()
+            if (['PENDING'].includes(status) && lastOpenendUrl.current.startsWith("tez:")) {
                 paymentFailedMessage.current = "Payment failed with GPay. Please retry payment with a different UPI app"
                 setFailedModalState(true)
-            } else if (['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("phonepe:")) {
+                stopBackgroundApiTask()
+            } else if (['PENDING'].includes(status) && lastOpenendUrl.current.startsWith("phonepe:")) {
                 paymentFailedMessage.current = "Payment failed with PhonePe. Please retry payment with a different UPI app"
                 setFailedModalState(true)
-            } else if (['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("paytmmp:")) {
+                stopBackgroundApiTask()
+            } else if (['PENDING'].includes(status) && lastOpenendUrl.current.startsWith("paytmmp:")) {
                 paymentFailedMessage.current = "Payment failed with PayTm. Please retry payment with a different UPI app"
                 setFailedModalState(true)
-            } else if (['PENDING'].includes(response.status) && lastOpenendUrl.current.startsWith("upi:")) {
+                stopBackgroundApiTask()
+            } else if (['PENDING'].includes(status) && lastOpenendUrl.current.startsWith("upi:")) {
                 paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
                 setFailedModalState(true)
-            } else if (['PENDING'].includes(response.status)) {
+                stopBackgroundApiTask()
+            } else if (['PENDING'].includes(status) && lastOpenendUrl.current != "") {
                 paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
                 setFailedModalState(true)
-            } else if (['FAILED', 'REJECTED'].includes(response.status)) {
+                stopBackgroundApiTask()
+            } else if (['FAILED', 'REJECTED'].includes(status)) {
                 paymentFailedMessage.current = reason.substringAfter(":")
                 if (!reasonCode.startsWith("uf", true)) {
                     paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
                 }
                 setFailedModalState(true)
-            } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(response.status)) {
+                stopBackgroundApiTask()
+            } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(status)) {
+                setSuccessfulTimeStamp(response.transactionTimestampLocale)
                 setSuccessModalState(true)
-            } else if (['EXPIRED'].includes(response.status)) {
+                stopBackgroundApiTask()
+            } else if (['EXPIRED'].includes(status)) {
                 setSessionExppireModalState(true)
+                stopBackgroundApiTask()
             }
             setLoadingState(false)
-            stopBackgroundApiTask()
         }
     }
 
     const onExitCheckout = () => {
-        clearInterval(timerInterval)
+        stopExpireTimerCountDown()
         const mockPaymentResult: PaymentResult = {
             status: status,
             transactionId: transactionId,
         };
         onPaymentResult(mockPaymentResult);
+        router.replace('/');
         return true
     }
 
@@ -196,7 +289,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     useEffect(() => {
         const fetchPaymentMethods = async () => {
             try {
-                setIsFirstLoading(true); 
+                setIsFirstLoading(true);
                 const response = await axios.get(`https://test-apis.boxpay.tech/v0/checkout/sessions/${token}`);
                 const paymentMethods = response.data.configs.paymentMethods;
                 const paymentDetails = response.data.paymentDetails
@@ -231,7 +324,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
     useEffect(() => {
         if (selectedIntent === "") {
-            handlePayment();
+            handlePaymentIntent();
         }
     }, [selectedIntent]);
 
@@ -242,11 +335,13 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
         const expiryTime = new Date(sessionExpiryTimestamp)
         const expiryTimeIST = new Date(expiryTime.getTime() + 5.5 * 60 * 60 * 1000);
 
-        timerInterval = setInterval(() => {
+        timerRef.current = setInterval(() => {
             const currentTimeIST = new Date(new Date().getTime() + 5.5 * 60 * 60 * 1000);
             const timeDiff = expiryTimeIST.getTime() - currentTimeIST.getTime();
             if (timeDiff <= 0) {
-                clearInterval(timerInterval);
+                if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                }
                 setStatus('EXPIRED')
                 setSessionExppireModalState(true)
             }
@@ -288,8 +383,8 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                         selectedIntent={selectedIntent}
                         setSelectedIntent={(it) => setSelectedIntent(it)}
                         amount={amount}
-                        handleUpiPayment={handlePayment}
-                        handleCollectPayment={(it)=> {console.log(it)}}
+                        handleUpiPayment={handlePaymentIntent}
+                        handleCollectPayment={(it) => handleUpiCollectPayment(it)}
                     />
                 </View>
             )}
@@ -307,6 +402,10 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                 <PaymentSuccess
                     onClick={onExitCheckout}
                     buttonColor={primaryButtonColor}
+                    amount={amount}
+                    transactionId={transactionId}
+                    method="UPI"
+                    localDateTime={successfulTimeStamp}
                 />
             )}
 

@@ -1,14 +1,47 @@
 import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Modal from 'react-native-modal'
 import LottieView from 'lottie-react-native'
 
 interface PaymentSuccessProps {
-    onClick:()=> void,
-    buttonColor:string
+    onClick: () => void,
+    buttonColor: string,
+    amount: string,
+    transactionId: string,
+    method: string,
+    localDateTime: string
 }
 
-const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick, buttonColor }) => {
+const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick, buttonColor, amount, transactionId, method, localDateTime }) => {
+    const [date, setDate] = useState("")
+    const [time, setTime] = useState("")
+    useEffect(() => {
+        const formatTransactionTimestamp = () => {
+            const [date,time] = localDateTime.split(" ");
+            const [day, month, year] = date.split("/")
+            const [hour, minute] = time.split(":");
+
+            // Map month number to short month name
+            const monthNames: { [key: string]: string } = {
+                "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
+                "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
+                "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"
+            };
+
+            const formattedDate = `${monthNames[month]} ${day}, ${year}`; // e.g., "Feb 25, 2025"
+
+            // Convert 24-hour to 12-hour format
+            const hourInt = parseInt(hour, 10);
+            const amPm = hourInt >= 12 ? "PM" : "AM";
+            const formattedHour = hourInt % 12 || 12; // Convert "13" to "1"
+            const formattedTime = `${formattedHour}:${minute} ${amPm}`;
+
+            setDate(formattedDate);
+            setTime(formattedTime);
+        };
+
+        formatTransactionTimestamp()
+    },);
     return (
         <View style={styles.container}>
 
@@ -21,29 +54,30 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick, buttonColor })
                         source={require('../../../assets/animations/payment_successful.json')}
                         autoPlay
                         loop
+                        speed={0.6}
                         style={{ width: 90, height: 90, alignSelf: 'center' }}
                     />
                     <Text style={styles.successfulHeading}>Payment Successful!</Text>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 24 }}>
                         <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' }}>Transaction ID</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>000085752257</Text>
+                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>{transactionId}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 14 }}>
                         <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' }}>Date</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>Mar 28, 2024</Text>
+                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>{date}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 14 }}>
                         <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' }}>Time</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>07:30 AM</Text>
+                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>{time}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 14 }}>
                         <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' }}>Payment Method</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>Credit Card(EMI)</Text>
+                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>{method}</Text>
                     </View>
                     <View style={styles.dashedLine} />
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
                         <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>Total Amount</Text>
-                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>₹2,590</Text>
+                        <Text style={{ fontSize: 14, fontWeight: 900, color: '#000000' }}>{amount}</Text>
                     </View>
                     <View style={styles.dashedLine} />
                     <Text
@@ -52,7 +86,7 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick, buttonColor })
                             color: '#4F4D55', alignSelf: 'center', paddingBottom: 16, paddingTop: 12
                         }}
                     >You will be redirected to the merchant's page</Text>
-                    <Pressable style={[styles.buttonContainer,{backgroundColor:buttonColor}]} onPress={onClick}>
+                    <Pressable style={[styles.buttonContainer, { backgroundColor: buttonColor }]} onPress={onClick}>
                         <Text style={styles.buttonText}>Done</Text>
                     </Pressable>
                 </View>

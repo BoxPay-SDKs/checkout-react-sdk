@@ -2,8 +2,8 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Pressable } from 'reac
 import React from 'react';
 
 interface HeaderProps {
-  items:String,
-  amount: String,
+  items:string,
+  amount: string,
   onBackPress: () => void;  // Accepting the function as a prop
 }
 
@@ -12,7 +12,6 @@ const Header: React.FC<HeaderProps> = ({ items, amount,onBackPress }) => {
     <View style={styles.header}>
       <View style={styles.headerTitleRow}>
       <Pressable onPress={() => { 
-        console.log("Arrow clicked"); // Debugging
         onBackPress(); // Trigger the passed function
       }}>
         <Image source={require("../../../assets/images/arrow-left.png")} style={styles.backArrow} />
@@ -33,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ items, amount,onBackPress }) => {
 export default Header;
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: "white", padding:16},
+  header: { backgroundColor: "white", padding:16, paddingTop:30},
   headerTitleRow: { flexDirection: "row", alignItems: "center" },
   headerColumn: { flex: 1 },
   backArrow: { height: 28, width: 28, marginRight: 8 },
