@@ -145,17 +145,17 @@ const UpiTimeScreen = () => { // Remove the Props Interface
       <Header onBackPress={onProceedBack} items={itemsLengthStr} amount={amountStr} />
 
       <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 16, marginTop: 32 }}>
-        <Text style={{ color: '#2D2B32', fontSize: 20, fontWeight: '900', textAlign: 'center' }}>
+        <Text style={{ color: '#2D2B32', fontSize: 18, fontWeight: '600', textAlign: 'center', fontFamily: 'Poppins-SemiBold' }}>
           Complete your payment
         </Text>
-        <Text style={{ color: '#2D2B32', fontSize: 16, fontWeight: '500', paddingTop: 12, textAlign: 'center', lineHeight: 24 }}>
+        <Text style={{ color: '#2D2B32', fontSize: 14, fontWeight: '400', paddingTop: 12, textAlign: 'center', lineHeight: 24, fontFamily: 'Poppins-Regular' }}>
           Open your UPI application and confirm the payment before the time expires
         </Text>
         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderColor: '#BABABA', borderWidth: 2, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 8, marginTop: 12 }}>
-          <Image source={require("../../../assets/images/upi-timer-sheet-upi-icon.png")} style={{ height: 20, width: 20, marginRight: 4 }} />
-          <Text style={{ color: '#1D1C20', fontSize: 14, fontWeight: '400' }}>UPI Id : {upiIdStr}</Text>
+          <Image source={require("../../../assets/images/upi-timer-sheet-upi-icon.png")} style={{ height: 16, width: 16, marginRight: 4 }} />
+          <Text style={{ color: '#1D1C20', fontSize: 12, fontWeight: '400', fontFamily: 'Poppins-Regular' }}>UPI Id : {upiIdStr}</Text>
         </View>
-        <Text style={{ color: '#1D1C20', fontSize: 18, fontWeight: '800', textAlign: 'center', marginTop: 32 }}>
+        <Text style={{ color: '#1D1C20', fontSize: 16, fontWeight: '500', textAlign: 'center', marginTop: 32, fontFamily: 'Poppins-Medium' }}>
           Expires in
         </Text>
         <View style={{ marginTop: 14, alignItems: 'center' }}>
@@ -177,14 +177,14 @@ const UpiTimeScreen = () => { // Remove the Props Interface
         </View>
         <View style={{ flexDirection: 'row', borderColor: '#ECECED', borderWidth: 2, borderRadius: 8, paddingVertical: 16, paddingHorizontal: 16, marginTop: 32 }}>
           <Image source={require("../../../assets/images/ic_info.png")} style={{ height: 26, width: 26 }} />
-          <Text style={{ color: '#1D1C20', fontSize: 14, fontWeight: '400', paddingStart: 16, lineHeight: 18 }}>
+          <Text style={{ color: '#1D1C20', fontSize: 12, fontWeight: '400', paddingStart: 16, lineHeight: 18, fontFamily: 'Poppins-Regular' }}>
             Kindly avoid using the back button until the transaction process is complete
           </Text>
         </View>
       </View>
 
       <View style={styles.cancelPaymentContainer}>
-        <Text style={{ fontSize: 18, fontWeight: '800', color: brandColorStr }} onPress={() => { setCancelClicked(true) }}>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: brandColorStr, fontFamily: 'Poppins-SemiBold' }} onPress={() => { setCancelClicked(true) }}>
           Cancel Payment
         </Text>
       </View>

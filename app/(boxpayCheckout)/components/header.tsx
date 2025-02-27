@@ -2,23 +2,27 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Pressable } from 'reac
 import React from 'react';
 
 interface HeaderProps {
-  items:string,
+  items: string,
   amount: string,
   onBackPress: () => void;  // Accepting the function as a prop
 }
 
-const Header: React.FC<HeaderProps> = ({ items, amount,onBackPress }) => {
+const Header: React.FC<HeaderProps> = ({ items, amount, onBackPress }) => {
   return (
     <View style={styles.header}>
       <View style={styles.headerTitleRow}>
-      <Pressable onPress={() => { 
-        onBackPress(); // Trigger the passed function
-      }}>
-        <Image source={require("../../../assets/images/arrow-left.png")} style={styles.backArrow} />
-      </Pressable>
+        <Pressable onPress={() => {
+          onBackPress(); // Trigger the passed function
+        }}>
+          <Image source={require("../../../assets/images/arrow-left.png")} style={styles.backArrow} />
+        </Pressable>
         <View style={styles.headerColumn}>
           <Text style={styles.headerTitle}>Payment Details</Text>
-          <Text style={styles.headerDesc}>{items} items . Total: {amount}</Text>
+          <Text style={styles.headerDesc}>
+            {items} items . Total:
+            <Text style={styles.amount}> {amount}</Text>
+          </Text>
+
         </View>
         <View style={styles.headerSecure}>
           <Image source={require("../../../assets/images/Lock.png")} style={styles.lockIcon} />
@@ -32,20 +36,26 @@ const Header: React.FC<HeaderProps> = ({ items, amount,onBackPress }) => {
 export default Header;
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: "white", padding:16, paddingTop:30},
+  header: { backgroundColor: "white", padding: 16, paddingTop: 30 },
   headerTitleRow: { flexDirection: "row", alignItems: "center" },
   headerColumn: { flex: 1 },
-  backArrow: { height: 28, width: 28, marginRight: 8 },
-  headerTitle: { fontSize: 18, color: "#363840", fontWeight: "900" },
-  headerDesc: { fontSize: 14, color: "#4F4D55", fontWeight: "400" },
+  backArrow: { height: 24, width: 24, marginRight: 8 },
+  headerTitle: { fontSize: 16, color: "#363840", fontWeight: "600", fontFamily: 'Poppins-SemiBold' },
+  headerDesc: { fontSize: 12, color: "#4F4D55", fontWeight: "400", fontFamily: 'Poppins-Regular' },
   headerSecure: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor:"#E8F6F1",
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    backgroundColor: "#E8F6F1",
     borderRadius: 6,
   },
-  lockIcon: { height: 16, width: 16, marginRight: 4 },
-  secureText: { fontSize: 14, color: "#1CA672", fontWeight: "600" },
+  lockIcon: { height: 12, width: 12, marginRight: 4 },
+  secureText: { fontSize: 10, color: "#1CA672", fontWeight: "600", fontFamily: 'Poppins-SemiBold' },
+  amount: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#4F4D55'
+  }
 });

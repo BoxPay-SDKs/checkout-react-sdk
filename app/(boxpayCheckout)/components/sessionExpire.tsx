@@ -4,11 +4,11 @@ import Modal from 'react-native-modal'
 import LottieView from 'lottie-react-native'
 
 interface SessionExpireProps {
-    onClick:()=> void,
-    buttonColor:string
+    onClick: () => void,
+    buttonColor: string
 }
 
-const SessionExpire: React.FC<SessionExpireProps> = ({ onClick , buttonColor}) => {
+const SessionExpire: React.FC<SessionExpireProps> = ({ onClick, buttonColor }) => {
     return (
         <View style={styles.container}>
 
@@ -20,12 +20,12 @@ const SessionExpire: React.FC<SessionExpireProps> = ({ onClick , buttonColor}) =
                     <LottieView
                         source={require('../../../assets/animations/payment_status_pending.json')}
                         autoPlay
-                        loop
+                        loop={false}
                         style={{ width: 90, height: 90, alignSelf: 'center' }}
                     />
                     <Text style={styles.successfulHeading}>Payment session has expired.</Text>
-                    <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' , textAlign:'center', alignSelf:'center', paddingTop:8, paddingBottom:16, lineHeight:20}}>For your security, your session has expired due to inactivity. Please restart the payment process.</Text>
-                    <Pressable style={[styles.buttonContainer, {backgroundColor:buttonColor}]} onPress={onClick}>
+                    <Text style={{ fontSize: 14, fontFamily: 'Poppins-Regular', fontWeight: 200, color: '#000000', textAlign: 'center', alignSelf: 'center', paddingTop: 8, paddingBottom: 16, lineHeight: 20 }}>For your security, your session has expired due to inactivity. Please restart the payment process.</Text>
+                    <Pressable style={[styles.buttonContainer, { backgroundColor: buttonColor }]} onPress={onClick}>
                         <Text style={styles.buttonText}>Go back to Home</Text>
                     </Pressable>
                 </View>
@@ -57,7 +57,8 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 800,
         alignSelf: 'center',
-        paddingTop: 8
+        paddingTop: 8,
+        fontFamily: 'Poppins-Regular'
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -70,6 +71,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: '600',
         fontSize: 16,
-        paddingVertical: 12
+        paddingVertical: 12,
+        fontFamily: 'Poppins-Regular'
     }
 });

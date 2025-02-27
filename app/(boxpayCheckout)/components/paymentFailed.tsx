@@ -20,11 +20,11 @@ const PaymentFailed: React.FC<PaymentFailedProps> = ({ onClick, buttonColor, err
                     <LottieView
                         source={require('../../../assets/animations/payment_failed.json')}
                         autoPlay
-                        loop
+                        loop={false}
                         style={{ width: 90, height: 90, alignSelf: 'center' }}
                     />
                     <Text style={styles.successfulHeading}>Payment Failed</Text>
-                    <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000', textAlign: 'center', alignSelf: 'center', paddingTop: 8, paddingBottom: 16, lineHeight: 20 }}>{errorMessage}</Text>
+                    <Text style={{ fontSize: 14, fontFamily: 'Poppins-Regular', fontWeight: 400, color: '#000000D9', textAlign: 'center', alignSelf: 'center', paddingTop: 8, paddingBottom: 16, lineHeight: 20 }}>{errorMessage}</Text>
                     <Pressable style={[styles.buttonContainer, { backgroundColor: buttonColor }]} onPress={onClick}>
                         <Text style={styles.buttonText}>Return to Payment Options</Text>
                     </Pressable>
@@ -58,10 +58,11 @@ const styles = StyleSheet.create({
     },
     successfulHeading: {
         color: '#E84142',
-        fontSize: 22,
-        fontWeight: 800,
+        fontSize: 20,
+        fontWeight: 600,
         alignSelf: 'center',
-        paddingTop: 8
+        paddingTop: 8,
+        fontFamily: 'Poppins-SemiBold'
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: '600',
         fontSize: 16,
-        paddingVertical: 12
+        paddingVertical: 12,
+        fontFamily: 'Poppins-SemiBold'
     },
 });

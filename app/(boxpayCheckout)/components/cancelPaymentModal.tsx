@@ -72,21 +72,24 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     iconImage: {
-        height: 26,
-        width: 26,
+        height: 20,
+        width: 20,
         tintColor: '#DB7C1D',
     },
     modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#2D2B32',
         marginLeft: 8,
+        fontFamily: 'Poppins-SemiBold'
     },
     modalText: {
-        fontSize: 16,
+        fontSize: 14,
         color: '#555',
         marginBottom: 20,
         lineHeight: 24,
+        fontWeight: '400',
+        fontFamily: 'Poppins-Regular'
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -95,16 +98,16 @@ const styles = StyleSheet.create({
     },
     cancelButton: {
         backgroundColor: '#fff',
-        borderRadius: 6,
-        paddingVertical: 12,
+        borderRadius: 7,
+        paddingVertical: 10,
         paddingHorizontal: 20,
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
     confirmButton: {
-        borderRadius: 6,
-        paddingVertical: 12,
+        borderRadius: 7,
+        paddingVertical: 10,
         paddingHorizontal: 20,
         flex: 1,
         marginLeft: 16,
@@ -114,14 +117,16 @@ const styles = StyleSheet.create({
     buttonText: {
         color: '#333',
         fontSize: 16,
-        fontWeight: '500',
-        textAlign: 'center'
+        fontWeight: '400',
+        textAlign: 'center',
+        fontFamily: 'Poppins-Medium'
     },
     confirmButtonText: {
         color: 'white',
         fontSize: 16,
         textAlign: 'center',
-        fontWeight: 700
+        fontWeight: 600,
+        fontFamily: 'Poppins-SemiBold'
     },
 });
 

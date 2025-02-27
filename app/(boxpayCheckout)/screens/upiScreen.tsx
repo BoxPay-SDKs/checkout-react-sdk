@@ -75,7 +75,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                         style={styles.intentIcon}
                                     />
                                 </Pressable>
-                                <Text style={styles.intentTitle}>GPay</Text>
+                                <Text style={[styles.intentTitle, selectedIntent === 'GPay' && { color: selectedColor, fontWeight: 600 }]}>GPay</Text>
                             </View>
                         )}
                         {isPhonePeVisible && (
@@ -98,7 +98,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                     />
                                 </Pressable>
 
-                                <Text style={styles.intentTitle}>PhonePe</Text>
+                                <Text style={[styles.intentTitle, selectedIntent === 'PhonePe' && { color: selectedColor, fontWeight: 600 }]}>PhonePe</Text>
                             </View>
                         )}
                         {isPaytmVisible && (
@@ -120,7 +120,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                         style={{ height: 28, width: 44 }}
                                     />
                                 </Pressable>
-                                <Text style={styles.intentTitle}>PayTm</Text>
+                                <Text style={[styles.intentTitle, selectedIntent === 'PayTm' && { color: selectedColor, fontWeight: 600 }]}>PayTm</Text>
                             </View>
                         )}
                         <View style={styles.intentContainer}>
@@ -168,14 +168,15 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <Image
                                                 source={require("../../../assets/images/add_icon.png")}
-                                                style={{ height: 14, width: 14 }}
+                                                style={{ height: 14, width: 14, tintColor: selectedColor }}
                                             />
                                             <Text
                                                 style={{
-                                                    fontSize: 16,
+                                                    fontSize: 14,
                                                     fontWeight: '600',
-                                                    color: '#1CA672',
-                                                    paddingStart: 10
+                                                    color: selectedColor,
+                                                    paddingStart: 10,
+                                                    fontFamily: 'Poppins-SemiBold'
                                                 }}
                                             >
                                                 Add new UPI Id
@@ -185,7 +186,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                         <Animated.Image
                                             source={require("../../../assets/images/chervon-down.png")}
                                             style={{
-                                                alignSelf: 'center', height: 10, width: 28, transform: [{
+                                                alignSelf: 'center', height: 6, width: 14, transform: [{
                                                     rotate: isRotated ? "180deg" : "0deg"
                                                 }]
                                             }}
@@ -210,14 +211,15 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <Image
                                                 source={require("../../../assets/images/add_icon.png")}
-                                                style={{ height: 14, width: 14 }}
+                                                style={{ height: 14, width: 14, tintColor: selectedColor }}
                                             />
                                             <Text
                                                 style={{
-                                                    fontSize: 16,
+                                                    fontSize: 14,
                                                     fontWeight: '600',
-                                                    color: '#1CA672',
-                                                    paddingStart: 10
+                                                    color: selectedColor,
+                                                    paddingStart: 10,
+                                                    fontFamily: 'Poppins-SemiBold'
                                                 }}
                                             >
                                                 Add new UPI Id
@@ -227,7 +229,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                         <Animated.Image
                                             source={require("../../../assets/images/chervon-down.png")}
                                             style={{
-                                                alignSelf: 'center', height: 10, width: 28, transform: [{
+                                                alignSelf: 'center', height: 6, width: 14, transform: [{
                                                     rotate: isRotated ? "180deg" : "0deg"
                                                 }]
                                             }}
@@ -265,7 +267,8 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                             />
                             {upiCollectError && (
                                 <Text style={{
-                                    fontSize: 14, fontWeight: 400, color: '#E12121', marginStart: 16, marginHorizontal: 16
+                                    fontSize: 12, fontWeight: 400, color: '#E12121', marginStart: 16, marginHorizontal: 16,
+                                    fontFamily: 'Poppins-Regular'
                                 }}>Please enter a valid UPI Id</Text>
                             )}
                             <Pressable style={[styles.buttonContainer, { backgroundColor: selectedColor }]} onPress={() => {
@@ -290,11 +293,12 @@ export default UpiScreen
 
 const styles = StyleSheet.create({
     addressText: {
-        marginStart: 16,
+        marginStart: 14,
         marginTop: 12,
-        fontWeight: '800',
+        fontWeight: '600',
         fontSize: 16,
-        color: '#020815B5'
+        color: '#020815B5',
+        fontFamily: 'Poppins-SemiBold'
     },
     upiIntentRow: {
         flexDirection: 'row',
@@ -304,18 +308,22 @@ const styles = StyleSheet.create({
     textInput: {
         marginHorizontal: 16,
         borderRadius: 8,
-        backgroundColor: 'white'
+        backgroundColor: 'white',
+        fontSize: 14,
+        fontFamily: 'Poppins-Regular',
+        fontWeight: 400,
+        color: '#0A090B'
     },
     intentIcon: {
-        height: 34,
-        width: 34
+        height: 26,
+        width: 26
     },
     intentIconBorder: {
         height: 56,
         width: 56,
         borderWidth: 1,
         borderColor: "#DCDEE3",
-        borderRadius: 6,
+        borderRadius: 7,
         justifyContent: 'center',
         alignItems: 'center'
     },
@@ -325,7 +333,9 @@ const styles = StyleSheet.create({
     },
     intentTitle: {
         color: "#363840",
-        fontSize: 14
+        fontSize: 14,
+        fontFamily: 'Poppins-Regular',
+        fontWeight: 400
     },
     intentBackground: {
         borderColor: '#F1F1F1',
@@ -342,12 +352,13 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         marginTop: 20,
-        marginHorizontal: 16
+        marginHorizontal: 16,
+        paddingVertical: 14
     },
     buttonText: {
         color: 'white',
-        fontWeight: '800',
+        fontWeight: '600',
         fontSize: 16,
-        paddingVertical: 12
+        fontFamily: 'Poppins-SemiBold'
     }
 });

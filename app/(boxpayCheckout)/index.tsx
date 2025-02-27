@@ -405,115 +405,158 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, sandboxEnv }) =>
             ) : (
                 <View style={{ flex: 1, backgroundColor: '#F5F6FB' }}>
                     {/* Keyboard Avoiding View */}
-                    <KeyboardAvoidingView
-                        style={{ flex: 1 }}
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} // Adjust this value as needed.
+                    <ScrollView  // Wrap the content with ScrollView
+                        contentContainerStyle={{ flexGrow: 1 }} // Ensure content can grow to take up space
                     >
-                        <TouchableWithoutFeedback>
-                            <ScrollView  // Wrap the content with ScrollView
-                                contentContainerStyle={{ flexGrow: 1 }} // Ensure content can grow to take up space
-                            >
-                                <View style={{ flex: 1 }}>
-                                    {/* Main UI Content */}
-                                    <Header onBackPress={onExitCheckout} items={totalItems} amount={amount} />
-                                    {address != "" && (
-                                        <View>
-                                            <Text style={{
-                                                marginStart: 16,
-                                                marginTop: 12,
-                                                fontWeight: '800',
-                                                fontSize: 16,
-                                                color: '#020815B5'
-                                            }}>Address</Text>
-                                            <View style={{
-                                                borderColor: '#F1F1F1',
-                                                borderWidth: 1,
-                                                marginHorizontal: 16,
-                                                marginVertical: 8,
-                                                paddingBottom: 16,
-                                                backgroundColor: "white",
-                                                flexDirection: 'row',
-                                                borderRadius: 12,
-                                            }}>
-                                                <Image source={require("../../assets/images/ic_location.png")} style={{ height: 25, width: 25, marginStart: 12, marginTop: 16 }} />
-                                                <View style={{ flexDirection: 'column', marginStart: 8, marginTop: 12, marginEnd: 16, flex: 1 }}>
-                                                    <Text style={{
-                                                        fontWeight: '400',
-                                                        fontSize: 16,
-                                                        color: '#4F4D55'
-                                                    }}>Deliver at {labelType}</Text>
-                                                    <Text style={{
-                                                        marginTop: 2,
-                                                        fontWeight: '600',
-                                                        fontSize: 14,
-                                                        color: '#4F4D55',
-                                                        flexShrink: 1
-                                                    }} numberOfLines={1} ellipsizeMode="tail">
-                                                        {address}
-                                                    </Text>
-                                                </View>
-                                            </View>
-                                        </View>
-                                    )}
-
-                                    <UpiScreen
-                                        selectedColor={primaryButtonColor}
-                                        isUpiIntentVisible={isUpiIntentVisibile}
-                                        isGpayVisible={isGpayInstalled}
-                                        isPaytmVisible={isPaytmInstalled}
-                                        isPhonePeVisible={isPhonePeInstalled}
-                                        isUpiCollectVisible={isUpiCollectVisible}
-                                        selectedIntent={selectedIntent}
-                                        setSelectedIntent={(it) => setSelectedIntent(it)}
-                                        amount={amount}
-                                        handleUpiPayment={handlePaymentIntent}
-                                        handleCollectPayment={(it) => handleUpiCollectPayment(it)}
-                                    />
-                                    <View>
-                                        <Text style={{
-                                            marginStart: 16,
-                                            marginTop: 12,
-                                            fontWeight: '800',
-                                            fontSize: 16,
-                                            color: '#020815B5'
-                                        }}>Order Summary</Text>
-                                        <View style={{
-                                            borderColor: '#F1F1F1',
-                                            borderWidth: 1,
-                                            marginHorizontal: 16,
-                                            marginVertical: 8,
-                                            paddingVertical: 16,
-                                            paddingHorizontal: 12,
-                                            backgroundColor: "white",
-                                            flexDirection: 'row',
-                                            borderRadius: 12,
-                                            justifyContent: 'space-between'
-                                        }}>
-                                            <Text style={{ fontSize: 16, fontWeight: '600', color: "#363840" }}>Price Details</Text>
-                                            <Text style={{ fontSize: 16, fontWeight: '600', color: "#363840" }}>{amount}</Text>
-                                        </View>
-                                    </View>
-
-                                    {/* Secured by BoxPay - Fixed at Bottom */}
+                        <View style={{ flex: 1 }}>
+                            {/* Main UI Content */}
+                            <Header onBackPress={onExitCheckout} items={totalItems} amount={amount} />
+                            {address != "" && (
+                                <View>
+                                    <Text style={{
+                                        marginStart: 16,
+                                        marginTop: 12,
+                                        fontWeight: '600',
+                                        fontSize: 14,
+                                        color: '#020815B5',
+                                        fontFamily: 'Poppins-Regular'
+                                    }}>Address</Text>
                                     <View style={{
-                                        flex: 1,
-                                        justifyContent: 'center',
-                                        alignItems: 'flex-end',
-                                        backgroundColor: '#F5F6FB',
-                                        flexDirection: 'row'
+                                        borderColor: '#F1F1F1',
+                                        borderWidth: 1,
+                                        marginHorizontal: 16,
+                                        marginVertical: 8,
+                                        paddingBottom: 16,
+                                        backgroundColor: "white",
+                                        flexDirection: 'row',
+                                        borderRadius: 12,
                                     }}>
-                                        <Text style={{ fontSize: 14, fontWeight: '500', color: "#888888", marginBottom: 25 }}>Secured by</Text>
-                                        <Image
-                                            source={require("../../assets/images/boxpay-logo.png")}
-                                            style={{ height: 70, width: 70, }}
-                                        />
+                                        <Image source={require("../../assets/images/ic_location.png")} style={{ height: 20, width: 20, marginStart: 12, marginTop: 16 }} />
+                                        <View style={{ flexDirection: 'column', marginStart: 8, marginTop: 12, marginEnd: 8, flex: 1 }}>
+                                            <Text style={{
+                                                fontWeight: '400',
+                                                fontSize: 12,
+                                                color: '#4F4D55',
+                                                fontFamily: 'Poppins-Regular'
+                                            }}>Deliver at <Text style={{
+                                                fontFamily: 'Poppins-Bold', fontSize
+                                                    : 12, fontWeight: 600, color: '#4F4D55'
+                                            }}>{labelType}</Text>
+                                            </Text>
+                                            <Text style={{
+                                                marginTop: 2,
+                                                fontWeight: '600',
+                                                fontSize: 14,
+                                                color: '#4F4D55',
+                                                flexShrink: 1,
+                                                fontFamily: 'Poppins-SemiBold',
+                                                lineHeight: 20
+                                            }}>
+                                                {address}
+                                            </Text>
+                                            <Text style={{
+                                                marginTop: 2,
+                                                fontWeight: '600',
+                                                fontSize: 14,
+                                                color: '#4F4D55',
+                                                flexShrink: 1,
+                                                fontFamily: 'Poppins-SemiBold',
+                                                lineHeight: 20
+                                            }}>
+                                                {firstName} {lastName}
+                                            </Text>
+                                            <Text style={{
+                                                marginTop: 2,
+                                                fontWeight: '600',
+                                                fontSize: 14,
+                                                color: '#4F4D55',
+                                                flexShrink: 1,
+                                                fontFamily: 'Poppins-SemiBold',
+                                                lineHeight: 20
+                                            }}>
+                                                {phone}
+                                            </Text>
+                                            <Text style={{
+                                                marginTop: 2,
+                                                fontWeight: '600',
+                                                fontSize: 14,
+                                                color: '#4F4D55',
+                                                flexShrink: 1,
+                                                fontFamily: 'Poppins-SemiBold',
+                                                lineHeight: 20
+                                            }}>
+                                                {email}
+                                            </Text>
+                                        </View>
                                     </View>
-
                                 </View>
-                            </ScrollView>
-                        </TouchableWithoutFeedback>
-                    </KeyboardAvoidingView>
+                            )}
+
+                            <UpiScreen
+                                selectedColor={primaryButtonColor}
+                                isUpiIntentVisible={isUpiIntentVisibile}
+                                isGpayVisible={isGpayInstalled}
+                                isPaytmVisible={isPaytmInstalled}
+                                isPhonePeVisible={isPhonePeInstalled}
+                                isUpiCollectVisible={isUpiCollectVisible}
+                                selectedIntent={selectedIntent}
+                                setSelectedIntent={(it) => setSelectedIntent(it)}
+                                amount={amount}
+                                handleUpiPayment={handlePaymentIntent}
+                                handleCollectPayment={(it) => handleUpiCollectPayment(it)}
+                            />
+                            <View>
+                                <Text style={{
+                                    marginStart: 16,
+                                    marginTop: 12,
+                                    fontWeight: '600',
+                                    fontSize: 14,
+                                    color: '#020815B5',
+                                    fontFamily: 'Poppins-SemiBold'
+                                }}>Order Summary</Text>
+                                <View style={{
+                                    borderColor: '#F1F1F1',
+                                    borderWidth: 1,
+                                    marginHorizontal: 16,
+                                    marginVertical: 8,
+                                    paddingVertical: 16,
+                                    paddingHorizontal: 12,
+                                    backgroundColor: "white",
+                                    flexDirection: 'row',
+                                    borderRadius: 12,
+                                    justifyContent: 'space-between'
+                                }}>
+                                    <Text style={{
+                                        fontSize: 14, fontWeight: '600', color: "#363840",
+                                        fontFamily: 'Poppins-SemiBold'
+                                    }}>Price Details</Text>
+                                    <Text style={{
+                                        fontSize: 14, fontWeight: '600', color: "#363840",
+                                        fontFamily: 'Poppins-SemiBold'
+                                    }}>{amount}</Text>
+                                </View>
+                            </View>
+
+                            {/* Secured by BoxPay - Fixed at Bottom */}
+                            <View style={{
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'flex-end',
+                                backgroundColor: '#F5F6FB',
+                                flexDirection: 'row'
+                            }}>
+                                <Text style={{
+                                    fontSize: 12, fontWeight: '500', color: "#888888", marginBottom: 15,
+                                    fontFamily: 'Poppins-Regular'
+                                }}>Secured by</Text>
+                                <Image
+                                    source={require("../../assets/images/boxpay-logo.png")}
+                                    style={{ height: 50, width: 50, }}
+                                />
+                            </View>
+
+                        </View>
+                    </ScrollView>
                 </View>
             )}
 
