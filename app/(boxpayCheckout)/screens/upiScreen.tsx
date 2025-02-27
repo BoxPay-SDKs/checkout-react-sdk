@@ -30,10 +30,8 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
     }
 
     const handleTextChange = (text: string) => {
-        console.log(text);
         setUpiCollectTextInput(text);
         setUpiCollectError(false);
-    
         if (text.trim() !== "" && /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{3,64}$/.test(text)) {
             setUpiCollectError(false);
             setUpiCollectValid(true)
@@ -44,7 +42,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
             }
         }
     };
-    
+
 
     return (
         <View>
@@ -67,6 +65,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                     ]}
                                     onPress={() => {
                                         setUpiCollectVisible(false)
+                                        setUpiCollectError(false)
                                         setIsRotated(false)
                                         setSelectedIntent("GPay")
                                     }}
@@ -89,6 +88,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                     onPress={() => {
                                         setUpiCollectVisible(false)
                                         setIsRotated(false)
+                                        setUpiCollectError(false);
                                         setSelectedIntent("PhonePe")
                                     }}
                                 >
@@ -110,6 +110,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                     ]}
                                     onPress={() => {
                                         setUpiCollectVisible(false)
+                                        setUpiCollectError(false);
                                         setIsRotated(false)
                                         setSelectedIntent("PayTm")
                                     }}
@@ -126,6 +127,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                             <Pressable style={styles.intentIconBorder} onPress={() => {
                                 setUpiCollectVisible(false)
                                 setIsRotated(false)
+                                setUpiCollectError(false);
                                 setSelectedIntent("")
                             }}>
                                 <Image
@@ -253,6 +255,13 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                 }}
                                 style={styles.textInput}
                                 error={upiCollectError}
+                                right={
+                                    upiCollectError ? (
+                                        <TextInput.Icon
+                                            icon={() => <Image source={require("../../../assets/images/ic_upi_error.png")} style={{ width: 24, height: 24 }} />}
+                                        />
+                                    ) : null
+                                }
                             />
                             {upiCollectError && (
                                 <Text style={{
@@ -319,6 +328,8 @@ const styles = StyleSheet.create({
         fontSize: 14
     },
     intentBackground: {
+        borderColor: '#F1F1F1',
+        borderWidth: 1,
         marginHorizontal: 16,
         marginVertical: 8,
         paddingVertical: 16,

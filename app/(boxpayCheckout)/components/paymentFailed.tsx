@@ -4,11 +4,11 @@ import Modal from 'react-native-modal'
 import LottieView from 'lottie-react-native'
 
 interface PaymentFailedProps {
-    onClick:()=> void,
-    buttonColor :string,
-    errorMessage:string
+    onClick: () => void,
+    buttonColor: string,
+    errorMessage: string
 }
-const PaymentFailed: React.FC<PaymentFailedProps> = ({ onClick, buttonColor , errorMessage}) => {
+const PaymentFailed: React.FC<PaymentFailedProps> = ({ onClick, buttonColor, errorMessage }) => {
     return (
         <View style={styles.container}>
 
@@ -24,8 +24,8 @@ const PaymentFailed: React.FC<PaymentFailedProps> = ({ onClick, buttonColor , er
                         style={{ width: 90, height: 90, alignSelf: 'center' }}
                     />
                     <Text style={styles.successfulHeading}>Payment Failed</Text>
-                    <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000' , textAlign:'center', alignSelf:'center', paddingTop:8, paddingBottom:16, lineHeight:20}}>{errorMessage}</Text>
-                    <Pressable style={[styles.buttonContainer,{backgroundColor:buttonColor}]} onPress={onClick}>
+                    <Text style={{ fontSize: 14, fontWeight: 200, color: '#000000', textAlign: 'center', alignSelf: 'center', paddingTop: 8, paddingBottom: 16, lineHeight: 20 }}>{errorMessage}</Text>
+                    <Pressable style={[styles.buttonContainer, { backgroundColor: buttonColor }]} onPress={onClick}>
                         <Text style={styles.buttonText}>Return to Payment Options</Text>
                     </Pressable>
                     {/* <Pressable style={[styles.buttonContainer, {backgroundColor:'white', borderColor:'#1CA672', borderWidth:1}]} onPress={onClick}>

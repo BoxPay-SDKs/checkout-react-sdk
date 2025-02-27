@@ -17,7 +17,7 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick, buttonColor, a
     const [time, setTime] = useState("")
     useEffect(() => {
         const formatTransactionTimestamp = () => {
-            const [date,time] = localDateTime.split(" ");
+            const [date, time] = localDateTime.split(" ");
             const [day, month, year] = date.split("/")
             const [hour, minute] = time.split(":");
 
@@ -33,7 +33,7 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick, buttonColor, a
             // Convert 24-hour to 12-hour format
             const hourInt = parseInt(hour, 10);
             const amPm = hourInt >= 12 ? "PM" : "AM";
-            const formattedHour = hourInt % 12 || 12; // Convert "13" to "1"
+            const formattedHour = (hourInt % 12 || 12).toString().padStart(2, '0') // Convert "13" to "1"
             const formattedTime = `${formattedHour}:${minute} ${amPm}`;
 
             setDate(formattedDate);

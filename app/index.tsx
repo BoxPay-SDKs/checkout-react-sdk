@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 20,
     fontWeight: 600,
-    marginBottom: 14
+    marginBottom: 30
   }
 });
 

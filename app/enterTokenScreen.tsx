@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TextInput, HelperText } from 'react-native-paper';
 import { Modal } from 'react-native';
 import { FlatList } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { Button } from 'react-native';
 import { useNavigation } from 'expo-router';
-import BoxpayCheckout from './(boxpayCheckout)';
+import BoxpayCheckout, { setTestEnv } from './(boxpayCheckout)';
+import { setPaymentHandler } from './(boxpayCheckout)/postRequest/paymentStatus';
 
 const EnterTokenScreen = () => {
   const [tokenTextInput, setTokenTextInput] = useState("");
@@ -39,56 +40,70 @@ const EnterTokenScreen = () => {
     navigation.goBack()
   };
 
+  useEffect(() => {
+    setPaymentHandler({
+      onPaymentResult: handlePaymentResult,
+    });
+    setTestEnv({
+      testEnv: environment == "test"
+    })
+  })
+
   return (
-    <View>
-      (token ? (
-      <BoxpayCheckout
-        token={token ? token : ""}
-        onPaymentResult={handlePaymentResult}
-      />
-      ) : (<View style={styles.container}>
-        <TextInput
-          mode='outlined'
-          label='Enter Token'
-          value={tokenTextInput}
-          onChangeText={(it) => {
-            setTokenTextInput(it);
-          }}
-          style={styles.textInput}
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
+      {token ? (
+        <BoxpayCheckout
+          token={token}
+          sandboxEnv={environment == "sandbox"}
         />
+      ) : (
+        <View style={styles.container}>
+          <TextInput
+            mode="outlined"
+            label="Enter Token"
+            value={tokenTextInput}
+            onChangeText={(it) => {
+              setTokenTextInput(it);
+            }}
+            style={styles.textInput}
+          />
 
-        <Text style={styles.label}>Select Environment:</Text>
+          <Text style={styles.label}>Select Environment:</Text>
 
-        <TouchableOpacity style={styles.dropdownButton} onPress={toggleDropdown}>
-          <Text>{environments.find(env => env.value === environment)?.label || "Select Environment"}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.dropdownButton} onPress={toggleDropdown}>
+            <Text>
+              {environments.find((env) => env.value === environment)?.label || "Select Environment"}
+            </Text>
+          </TouchableOpacity>
 
-        <Pressable style={styles.proceedButton} onPress={handleProceedPress}>
-          <Text style={styles.proceedButtonText}>Proceed</Text>
-        </Pressable>
+          <Pressable style={styles.proceedButton} onPress={handleProceedPress}>
+            <Text style={styles.proceedButtonText}>Proceed</Text>
+          </Pressable>
 
-        <Modal visible={isDropdownVisible} animationType="slide" transparent={true}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <FlatList
-                data={environments}
-                keyExtractor={(item) => item.value}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.dropdownItem}
-                    onPress={() => selectEnvironment(item.value)}
-                  >
-                    <Text>{item.label}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-              <Button title="Close" onPress={toggleDropdown} />
+          <Modal visible={isDropdownVisible} animationType="slide" transparent={true}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <FlatList
+                  data={environments}
+                  keyExtractor={(item) => item.value}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => selectEnvironment(item.value)}
+                    >
+                      <Text>{item.label}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+                <Button title="Close" onPress={toggleDropdown} />
+              </View>
             </View>
-          </View>
-        </Modal>
-      </View>))
+          </Modal>
+        </View>
+      )}
     </View>
   );
+
 };
 
 export default EnterTokenScreen;

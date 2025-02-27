@@ -1,4 +1,4 @@
-import { View, Text, Image, BackHandler, StyleSheet } from 'react-native';
+import { View, Text, Image, BackHandler, StyleSheet } from 'react-native'; // Import Modal
 import React, { useEffect, useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import Header from '../components/header';
@@ -7,56 +7,41 @@ import fetchStatus from '../postRequest/fetchStatus';
 import PaymentFailed from '../components/paymentFailed';
 import PaymentSuccess from '../components/paymentSuccess';
 import SessionExpire from '../components/sessionExpire';
-import { PaymentResult } from '..';
-import { useSharedContext } from '../sharedContent/sharedContext';
 import CancelPaymentModal from '../components/cancelPaymentModal';
+import { paymentHandler, PaymentResult } from '../postRequest/paymentStatus';
 
-const UpiTimeScreen = () => {
-  const { amount, token, itemsLength, upiId, brandColor, onPaymentResult: onPaymentResultString } = useLocalSearchParams();
+
+const UpiTimeScreen = () => { // Remove the Props Interface
+  const { amount, token, itemsLength, upiId, brandColor, env } = useLocalSearchParams();
 
   const amountStr = Array.isArray(amount) ? amount[0] : amount;
   const tokenStr = Array.isArray(token) ? token[0] : token;
   const itemsLengthStr = Array.isArray(itemsLength) ? itemsLength[0] : itemsLength;
   const upiIdStr = Array.isArray(upiId) ? upiId[0] : upiId;
   const brandColorStr = Array.isArray(brandColor) ? brandColor[0] : brandColor;
-  const onPaymentResultStr = Array.isArray(onPaymentResultString) ? onPaymentResultString[0] : onPaymentResultString;
+  const envStr = Array.isArray(env) ? env[0] : env;
 
   const [timerValue, setTimerValue] = useState(5 * 60);
-  const [cancelClicked, setCancelClicked] = useState(false)
+  const [cancelClicked, setCancelClicked] = useState(false);
   const [failedModalOpen, setFailedModalState] = useState(false);
   const [successModalOpen, setSuccessModalState] = useState(false);
   const paymentFailedMessage = useRef<string>("You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods.");
   const [sessionExpireModalOpen, setSessionExppireModalState] = useState(false);
   const [successfulTimeStamp, setSuccessfulTimeStamp] = useState("");
-  const { status, setStatus, transactionId, setTransactionId } = useSharedContext()
-  const [isTimerRunning, setIsTimerRunning] = useState(true); // Add state to control timer
-  let backgroundApiInterval: NodeJS.Timeout;
-
-  const onPaymentResult = useRef<(result: PaymentResult) => void>(() => { }); // Initialize with a no-op function
-
-  useEffect(() => {
-    if (onPaymentResultStr) {
-      try {
-        // eslint-disable-next-line no-new-func
-        const recreatedFunction = new Function(`return ${onPaymentResultStr}`)() as (result: PaymentResult) => void;
-        onPaymentResult.current = recreatedFunction;
-      } catch (error) {
-        console.error("Failed to recreate onPaymentResult function:", error);
-        // Handle the error appropriately - perhaps set a state to show an error to the user.
-      }
-    }
-  }, [onPaymentResultStr]);
-
+  const [status, setStatus] = useState("")
+  const [transactionId, setTransactionId] = useState("")
+  const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const backgroundApiInterval = useRef<NodeJS.Timeout | null>(null);
+  const timerInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    let timerInterval: NodeJS.Timeout | null = null;
-
     if (isTimerRunning) {
-      timerInterval = setInterval(() => {
+      timerInterval.current = setInterval(() => {
         setTimerValue((prevTime) => {
           if (prevTime <= 1) {
-            clearInterval(timerInterval!);
-            stopBackgroundApiTask()
+            clearInterval(timerInterval.current!);
+            stopBackgroundApiTask();
+            setFailedModalState(true);
             return 0;
           }
           return prevTime - 1;
@@ -64,35 +49,37 @@ const UpiTimeScreen = () => {
       }, 1000);
     }
     return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
+      if (timerInterval.current) {
+        clearInterval(timerInterval.current);
       }
     };
   }, [isTimerRunning]);
 
   useEffect(() => {
     if (failedModalOpen || successModalOpen || sessionExpireModalOpen) {
-      setIsTimerRunning(false); // Stop timer when modal is open
+      setIsTimerRunning(false);
     } else {
-      setIsTimerRunning(true); // Restart timer when modal is closed
+      setIsTimerRunning(true);
     }
   }, [failedModalOpen, successModalOpen, sessionExpireModalOpen]);
-
 
   const onExitCheckout = () => {
     const mockPaymentResult: PaymentResult = {
       status: status,
       transactionId: transactionId,
     };
-    onPaymentResult.current(mockPaymentResult);
-    router.replace('../../');
-  }
+    paymentHandler.onPaymentResult(mockPaymentResult);
+    router.dismissAll()
+  };
 
   const onProceedBack = () => {
-    stopBackgroundApiTask()
-    router.back()
-    return true
-  }
+    if (timerInterval.current) {
+      clearInterval(timerInterval.current);
+    }
+    stopBackgroundApiTask();
+    router.back();
+    return true;
+  };
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', onProceedBack);
@@ -109,41 +96,49 @@ const UpiTimeScreen = () => {
 
   useEffect(() => {
     const startBackgroundApiTask = () => {
-      backgroundApiInterval = setInterval(() => {
-        callFetchStatusApi()
+      backgroundApiInterval.current = setInterval(() => {
+        callFetchStatusApi();
       }, 4000);
     };
-    startBackgroundApiTask()
-  }, [])
+    startBackgroundApiTask();
+  }, []);
 
   const stopBackgroundApiTask = () => {
-    if (backgroundApiInterval) {
-      clearInterval(backgroundApiInterval)
+    if (backgroundApiInterval.current) {
+      clearInterval(backgroundApiInterval.current);
     }
   };
 
   const callFetchStatusApi = async () => {
-    const response = await fetchStatus(tokenStr)
-    console.log(response)
-    setStatus(response.status)
-    setTransactionId(response.transactionId)
-    const reasonCode = response.reasonCode
-    const status = response.status.toUpperCase()
+    const response = await fetchStatus(tokenStr, envStr);
+    setStatus(response.status);
+    setTransactionId(response.transactionId);
+    const reasonCode = response.reasonCode;
+    const status = response.status.toUpperCase();
     if (['FAILED', 'REJECTED'].includes(status)) {
       if (!reasonCode?.startsWith("uf", true)) {
-        paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods."
+        paymentFailedMessage.current = "You may have cancelled the payment or there was a delay in response from the Bank's page. Please retry payment or try using other methods.";
       }
-      setFailedModalState(true)
-      stopBackgroundApiTask()
+      setFailedModalState(true);
+      stopBackgroundApiTask();
+      if (timerInterval.current) {
+        clearInterval(timerInterval.current);
+      }
     } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(status)) {
-      setSuccessfulTimeStamp(response.transactionTimestampLocale)
-      setSuccessModalState(true)
-      stopBackgroundApiTask()
+      setSuccessfulTimeStamp(response.transactionTimestampLocale);
+      setSuccessModalState(true);
+      stopBackgroundApiTask();
+      if (timerInterval.current) {
+        clearInterval(timerInterval.current);
+      }
     } else if (['EXPIRED'].includes(status)) {
-      setSessionExppireModalState(true)
-      stopBackgroundApiTask()
+      setSessionExppireModalState(true);
+      stopBackgroundApiTask();
+      if (timerInterval.current) {
+        clearInterval(timerInterval.current);
+      }
     }
-  }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F5F6FB' }}>
@@ -196,8 +191,8 @@ const UpiTimeScreen = () => {
       {failedModalOpen && (
         <PaymentFailed
           onClick={() => {
-            setFailedModalState(false)
-            onProceedBack()
+            setFailedModalState(false);
+            onProceedBack();
           }}
           buttonColor={brandColorStr}
           errorMessage={paymentFailedMessage.current}
@@ -225,23 +220,20 @@ const UpiTimeScreen = () => {
       {cancelClicked && (
         <CancelPaymentModal
           onNoClick={() => {
-            console.log("onClickno")
-            setCancelClicked(false)
+            setCancelClicked(false);
           }}
           onYesClick={() => {
-            console.log("onCliuckyesy")
-            setCancelClicked(false)
-            onProceedBack()
+            setCancelClicked(false);
+            onProceedBack();
           }}
           brandcolor={brandColorStr}
         />
       )}
     </View>
   );
+};
 
-}
-
-export default UpiTimeScreen
+export default UpiTimeScreen;
 
 const styles = StyleSheet.create({
   cancelPaymentContainer: {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, BackHandler, ToastAndroid, AppState } from 'react-native';
+import { View, Text, BackHandler, ToastAndroid, AppState, Image, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'; // Added ScrollView
 import Header from './components/header';
 import axios from 'axios';
 import upiPostRequest from './postRequest/upiPostRequest';
@@ -13,26 +13,22 @@ import ShimmerPlaceHolder from "react-native-shimmer-placeholder";
 import fetchStatus from './postRequest/fetchStatus';
 import UpiScreen from './screens/upiScreen';
 import { router } from 'expo-router';
-import { useSharedContext } from './sharedContent/sharedContext';
-
-// Define the PaymentResult type (you can adjust it as per your actual result structure)
-// types.ts
-export type PaymentResult = {
-    status: string;  // Use lowercase `string`, not `String`
-    transactionId: string;
-};
-
+import { PaymentResult } from './postRequest/paymentStatus';
+import { paymentHandler } from "../(boxpayCheckout)/postRequest/paymentStatus";
 
 // Define the props interface
 interface BoxpayCheckoutProps {
     token: string;
-    onPaymentResult: (result: PaymentResult) => void;
+    sandboxEnv: boolean
 }
 
-const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult }) => {
-    const { status, setStatus, transactionId, setTransactionId } = useSharedContext()
-    // const [status, setStatus] = useState("")
-    // const [transactionId, setTransactionId] = useState("")
+const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, sandboxEnv }) => {
+    const [status, setStatus] = useState("NOACTION")
+    const [transactionId, setTransactionId] = useState("")
+    const tokenState = useRef(token)
+    const sandboxEnvState = useRef(sandboxEnv)
+    const testEnv = testHandler.testEnv
+    const env = sandboxEnvState.current ? 'sandbox' : 'prod'
     const [isUpiIntentVisibile, setIsUpiIntentVisible] = useState(false)
     const [isUpiCollectVisible, setisUpiCollectVisible] = useState(false)
     const [appState] = useState(AppState.currentState);
@@ -48,6 +44,8 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     const [email, setEmail] = useState("")
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
+    const [address, setAddress] = useState("")
+    const [labelType, setLabelType] = useState("")
     const [phone, setPhone] = useState("")
     const [uniqueRef, setUniqueRef] = useState("")
     const [dob, setDob] = useState("")
@@ -65,7 +63,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     const handlePaymentIntent = async () => {
         setLoadingState(true)
         const response = await upiPostRequest(
-            token,
+            tokenState.current,
             email,
             firstName,
             lastName,
@@ -76,7 +74,8 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             {
                 type: "upi/intent",
                 ...(selectedIntent && { upiAppDetails: { upiApp: selectedIntent } }) // Conditionally add upiAppDetails only if upiIntent is present
-            }
+            },
+            testEnv ? 'test' : env
         )
         try {
             setStatus(response.status.status)
@@ -110,7 +109,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     const handleUpiCollectPayment = async (upiId: string) => {
         setLoadingState(true)
         const response = await upiPostRequest(
-            token,
+            tokenState.current,
             email,
             firstName,
             lastName,
@@ -123,16 +122,15 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                 upi: {
                     shopperVpa: upiId
                 }
-            }
+            },
+            testEnv ? 'test' : env
         )
         try {
-            console.log(response)
             setStatus(response.status.status)
             setTransactionId(response.transactionId)
             const reason = response.status.statusReason
             const reasonCode = response.status.reasonCode
             const status = response.status.status.toUpperCase()
-            console.log(status)
             if (status === 'REQUIRESACTION') {
                 navigateToUpiTimerModal(upiId)
             } else if (['FAILED', 'REJECTED'].includes(status)) {
@@ -157,16 +155,17 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     };
 
     const navigateToUpiTimerModal = (upiId: string) => {
+        console.log(`onpaymentresult ${paymentHandler.onPaymentResult}`)
         setLoadingState(false)
         router.push({
             pathname: "/screens/upiTimerScreen",
             params: {
                 amount: amount,
-                token: token,
+                token: tokenState.current,
                 itemsLength: totalItems,
                 upiId: upiId,
                 brandColor: primaryButtonColor,
-                onPaymentResult: onPaymentResult.toString(),
+                env: testEnv ? 'test' : env
             }
         })
     }
@@ -212,16 +211,13 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
     };
 
     const stopExpireTimerCountDown = () => {
-        console.log(timerRef.current)
         if (timerRef.current) {
-            console.log("timer stopped")
             clearInterval(timerRef.current)
         }
     }
 
     const callFetchStatusApi = async () => {
-        const response = await fetchStatus(token)
-        console.log(response)
+        const response = await fetchStatus(tokenState.current, testEnv ? 'test' : env)
         if (appState == 'active') {
             setStatus(response.status)
             setTransactionId(response.transactionId)
@@ -273,8 +269,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
             status: status,
             transactionId: transactionId,
         };
-        onPaymentResult(mockPaymentResult);
-        router.replace('/');
+        paymentHandler.onPaymentResult(mockPaymentResult);
         return true
     }
 
@@ -288,15 +283,22 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
     useEffect(() => {
         const fetchPaymentMethods = async () => {
+            const endpoint: string = testEnv
+                ? 'test-apis.boxpay.tech'
+                : env == 'sandbox'
+                    ? 'sandbox-apis.boxpay.tech'
+                    : 'apis.boxpay.in';
             try {
                 setIsFirstLoading(true);
-                const response = await axios.get(`https://test-apis.boxpay.tech/v0/checkout/sessions/${token}`);
+                const response = await axios.get(`https://${endpoint}/v0/checkout/sessions/${tokenState.current}`);
                 const paymentMethods = response.data.configs.paymentMethods;
                 const paymentDetails = response.data.paymentDetails
                 setIsUpiIntentVisible(paymentMethods.find((method: any) => method.type === 'Upi' && method.brand === 'UpiIntent'))
                 setisUpiCollectVisible(paymentMethods.find((method: any) => method.type === 'Upi' && method.brand === 'UpiCollect'))
                 setAmount(`${paymentDetails.money.currencySymbol}${paymentDetails.money.amountLocaleFull}`)
-                setTotalItems(paymentDetails.order.items.length)
+                if (paymentDetails.order != null && paymentDetails.order.items != null) {
+                    setTotalItems(paymentDetails.order.items.length)
+                }
                 setPrimaryButtonColor(response.data.merchantDetails.checkoutTheme.primaryButtonColor)
                 setEmail(paymentDetails.shopper.email)
                 setFirstName(paymentDetails.shopper.firstName)
@@ -312,15 +314,47 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                 const paytm = await Linking.canOpenURL("paytmmp://")
                 setIsPaytmInstalled(paytm)
                 setIsPhonePeInstalled(isInstalled)
+                if (paymentDetails.shopper.deliveryAddress != null) {
+                    const deliveryObject = paymentDetails.shopper.deliveryAddress
+                    setLabelType(deliveryObject.labelType)
+                    const address1 = deliveryObject.address1
+                    const address2 = deliveryObject.address2
+                    const city = deliveryObject.city
+                    const state = deliveryObject.state
+                    const postalCode = deliveryObject.postalCode
+
+                    if (address2 == null || address2 == "") {
+                        setAddress(`${address1}, ${city}, ${state}, ${postalCode}`)
+                    } else {
+                        setAddress(`${address1}, ${address2}, ${city}, ${state}, ${postalCode}`)
+                    }
+
+                    if (['FAILED', 'REJECTED'].includes(response.data.status)) {
+                        setTransactionId(response.data.lastTransactionId)
+                        setStatus(response.data.status)
+                        setFailedModalState(true)
+                        stopBackgroundApiTask()
+                    } else if (['APPROVED', 'SUCCESS', 'PAID'].includes(response.data.status)) {
+                        setSuccessfulTimeStamp(response.data.lastPaidAtTimestampLocale)
+                        setTransactionId(response.data.lastTransactionId)
+                        setStatus(response.data.status)
+                        setSuccessModalState(true)
+                        stopBackgroundApiTask()
+                    } else if (['EXPIRED'].includes(response.data.status)) {
+                        setSessionExppireModalState(true)
+                        stopBackgroundApiTask()
+                    }
+                }
             } catch (error) {
-                ToastAndroid.show('Internal server occured', ToastAndroid.SHORT);
+                console.log(error)
+                ToastAndroid.show("Please check the token and the envirounment selected", ToastAndroid.SHORT);
             } finally {
                 setIsFirstLoading(false); // Set loading to false when API request is finished
             }
         };
 
         fetchPaymentMethods();
-    }, [token]);
+    }, [tokenState.current]);
 
     useEffect(() => {
         if (selectedIntent === "") {
@@ -370,22 +404,116 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
                 </View>
             ) : (
                 <View style={{ flex: 1, backgroundColor: '#F5F6FB' }}>
-                    {/* Main UI Content */}
-                    <Header onBackPress={onExitCheckout} items={totalItems} amount={amount} />
+                    {/* Keyboard Avoiding View */}
+                    <KeyboardAvoidingView
+                        style={{ flex: 1 }}
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} // Adjust this value as needed.
+                    >
+                        <TouchableWithoutFeedback>
+                            <ScrollView  // Wrap the content with ScrollView
+                                contentContainerStyle={{ flexGrow: 1 }} // Ensure content can grow to take up space
+                            >
+                                <View style={{ flex: 1 }}>
+                                    {/* Main UI Content */}
+                                    <Header onBackPress={onExitCheckout} items={totalItems} amount={amount} />
+                                    {address != "" && (
+                                        <View>
+                                            <Text style={{
+                                                marginStart: 16,
+                                                marginTop: 12,
+                                                fontWeight: '800',
+                                                fontSize: 16,
+                                                color: '#020815B5'
+                                            }}>Address</Text>
+                                            <View style={{
+                                                borderColor: '#F1F1F1',
+                                                borderWidth: 1,
+                                                marginHorizontal: 16,
+                                                marginVertical: 8,
+                                                paddingBottom: 16,
+                                                backgroundColor: "white",
+                                                flexDirection: 'row',
+                                                borderRadius: 12,
+                                            }}>
+                                                <Image source={require("../../assets/images/ic_location.png")} style={{ height: 25, width: 25, marginStart: 12, marginTop: 16 }} />
+                                                <View style={{ flexDirection: 'column', marginStart: 8, marginTop: 12, marginEnd: 16, flex: 1 }}>
+                                                    <Text style={{
+                                                        fontWeight: '400',
+                                                        fontSize: 16,
+                                                        color: '#4F4D55'
+                                                    }}>Deliver at {labelType}</Text>
+                                                    <Text style={{
+                                                        marginTop: 2,
+                                                        fontWeight: '600',
+                                                        fontSize: 14,
+                                                        color: '#4F4D55',
+                                                        flexShrink: 1
+                                                    }} numberOfLines={1} ellipsizeMode="tail">
+                                                        {address}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    )}
 
-                    <UpiScreen
-                        selectedColor={primaryButtonColor}
-                        isUpiIntentVisible={isUpiIntentVisibile}
-                        isGpayVisible={isGpayInstalled}
-                        isPaytmVisible={isPaytmInstalled}
-                        isPhonePeVisible={isPhonePeInstalled}
-                        isUpiCollectVisible={isUpiCollectVisible}
-                        selectedIntent={selectedIntent}
-                        setSelectedIntent={(it) => setSelectedIntent(it)}
-                        amount={amount}
-                        handleUpiPayment={handlePaymentIntent}
-                        handleCollectPayment={(it) => handleUpiCollectPayment(it)}
-                    />
+                                    <UpiScreen
+                                        selectedColor={primaryButtonColor}
+                                        isUpiIntentVisible={isUpiIntentVisibile}
+                                        isGpayVisible={isGpayInstalled}
+                                        isPaytmVisible={isPaytmInstalled}
+                                        isPhonePeVisible={isPhonePeInstalled}
+                                        isUpiCollectVisible={isUpiCollectVisible}
+                                        selectedIntent={selectedIntent}
+                                        setSelectedIntent={(it) => setSelectedIntent(it)}
+                                        amount={amount}
+                                        handleUpiPayment={handlePaymentIntent}
+                                        handleCollectPayment={(it) => handleUpiCollectPayment(it)}
+                                    />
+                                    <View>
+                                        <Text style={{
+                                            marginStart: 16,
+                                            marginTop: 12,
+                                            fontWeight: '800',
+                                            fontSize: 16,
+                                            color: '#020815B5'
+                                        }}>Order Summary</Text>
+                                        <View style={{
+                                            borderColor: '#F1F1F1',
+                                            borderWidth: 1,
+                                            marginHorizontal: 16,
+                                            marginVertical: 8,
+                                            paddingVertical: 16,
+                                            paddingHorizontal: 12,
+                                            backgroundColor: "white",
+                                            flexDirection: 'row',
+                                            borderRadius: 12,
+                                            justifyContent: 'space-between'
+                                        }}>
+                                            <Text style={{ fontSize: 16, fontWeight: '600', color: "#363840" }}>Price Details</Text>
+                                            <Text style={{ fontSize: 16, fontWeight: '600', color: "#363840" }}>{amount}</Text>
+                                        </View>
+                                    </View>
+
+                                    {/* Secured by BoxPay - Fixed at Bottom */}
+                                    <View style={{
+                                        flex: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'flex-end',
+                                        backgroundColor: '#F5F6FB',
+                                        flexDirection: 'row'
+                                    }}>
+                                        <Text style={{ fontSize: 14, fontWeight: '500', color: "#888888", marginBottom: 25 }}>Secured by</Text>
+                                        <Image
+                                            source={require("../../assets/images/boxpay-logo.png")}
+                                            style={{ height: 70, width: 70, }}
+                                        />
+                                    </View>
+
+                                </View>
+                            </ScrollView>
+                        </TouchableWithoutFeedback>
+                    </KeyboardAvoidingView>
                 </View>
             )}
 
@@ -421,6 +549,15 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, onPaymentResult 
 
 export default BoxpayCheckout;
 
-const styles = StyleSheet.create({
 
-});
+export type TestEnvArg = {
+    testEnv: boolean
+};
+
+export let testHandler: TestEnvArg = {
+    testEnv: false
+};
+
+export const setTestEnv = (handler: TestEnvArg) => {
+    testHandler = handler;
+};

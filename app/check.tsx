@@ -1,12 +1,11 @@
 import { View, Text } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import BoxpayCheckout from '../app/(boxpayCheckout)/index';  // Import the SDK component
-import { useNavigation } from 'expo-router';
-import { SharedContextProvider } from './(boxpayCheckout)/sharedContent/sharedContext';
+import BoxpayCheckout, { setTestEnv } from '../app/(boxpayCheckout)/index';  // Import the SDK component
+import { PaymentResult, setPaymentHandler } from '../app/(boxpayCheckout)/postRequest/paymentStatus'
+import { router } from 'expo-router';
 
 const Check = () => {
-  const navigation = useNavigation()
   const [token, setToken] = useState<string | null>(null); // Store the token
   const [error, setError] = useState<string | null>(null); // Store any error messages
 
@@ -28,24 +27,27 @@ const Check = () => {
 
   useEffect(() => {
     handleApiCall();  // Call the function to fetch the token when the component mounts
+    setPaymentHandler({
+      onPaymentResult: handlePaymentResult,
+    });
+    setTestEnv({
+      testEnv: true
+    })
   }, []);
 
   // Handle payment result from BoxpayCheckout
-  const handlePaymentResult = (result: { status: String; transactionId: string }) => {
+  const handlePaymentResult = (result: PaymentResult) => {
     alert(`Payment ${result.status} :  + ${result.transactionId}`);
-    navigation.goBack()
+    router.replace('/');
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       {token ? (
-        // Render BoxpayCheckout when token is available
-        // <SharedContextProvider>
         <BoxpayCheckout
           token={token}
-          onPaymentResult={handlePaymentResult}
+          sandboxEnv={false}
         />
-        // </SharedContextProvider>
       ) : (
         <Text style={{ alignSelf: 'center', justifyContent: 'center', paddingTop: 100 }}>{error ? `Error: ${error}` : 'Loading token...'}</Text>
       )}
