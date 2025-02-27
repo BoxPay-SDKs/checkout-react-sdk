@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 20,
-    fontWeight: 600,
+    fontWeight: '600',
     marginBottom: 30,
     fontFamily: 'Poppins-Regular'
   }

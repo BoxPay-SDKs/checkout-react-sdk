@@ -24,7 +24,7 @@ const SessionExpire: React.FC<SessionExpireProps> = ({ onClick, buttonColor }) =
                         style={{ width: 90, height: 90, alignSelf: 'center' }}
                     />
                     <Text style={styles.successfulHeading}>Payment session has expired.</Text>
-                    <Text style={{ fontSize: 14, fontFamily: 'Poppins-Regular', fontWeight: 200, color: '#000000', textAlign: 'center', alignSelf: 'center', paddingTop: 8, paddingBottom: 16, lineHeight: 20 }}>For your security, your session has expired due to inactivity. Please restart the payment process.</Text>
+                    <Text style={{ fontSize: 14, fontFamily: 'Poppins-Regular', fontWeight: '200', color: '#000000', textAlign: 'center', alignSelf: 'center', paddingTop: 8, paddingBottom: 16, lineHeight: 20 }}>For your security, your session has expired due to inactivity. Please restart the payment process.</Text>
                     <Pressable style={[styles.buttonContainer, { backgroundColor: buttonColor }]} onPress={onClick}>
                         <Text style={styles.buttonText}>Go back to Home</Text>
                     </Pressable>
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     successfulHeading: {
         color: '#DB7C1D',
         fontSize: 22,
-        fontWeight: 800,
+        fontWeight: '800',
         alignSelf: 'center',
         paddingTop: 8,
         fontFamily: 'Poppins-Regular'

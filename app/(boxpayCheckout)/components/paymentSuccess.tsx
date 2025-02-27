@@ -59,30 +59,30 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onClick, buttonColor, a
                     />
                     <Text style={styles.successfulHeading}>Payment Successful!</Text>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 24 }}>
-                        <Text style={{ fontSize: 12, fontWeight: 400, color: '#000000', fontFamily: 'Poppins-Regular' }}>Transaction ID</Text>
-                        <Text style={{ fontSize: 12, fontWeight: 600, color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{transactionId}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '400', color: '#000000', fontFamily: 'Poppins-Regular' }}>Transaction ID</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{transactionId}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 14 }}>
-                        <Text style={{ fontSize: 12, fontWeight: 400, color: '#000000', fontFamily: 'Poppins-Regular' }}>Date</Text>
-                        <Text style={{ fontSize: 12, fontWeight: 600, color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{date}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '400', color: '#000000', fontFamily: 'Poppins-Regular' }}>Date</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{date}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 14 }}>
-                        <Text style={{ fontSize: 12, fontWeight: 400, color: '#000000', fontFamily: 'Poppins-Regular' }}>Time</Text>
-                        <Text style={{ fontSize: 12, fontWeight: 600, color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{time}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '400', color: '#000000', fontFamily: 'Poppins-Regular' }}>Time</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{time}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 14 }}>
-                        <Text style={{ fontSize: 12, fontWeight: 400, color: '#000000', fontFamily: 'Poppins-Regular' }}>Payment Method</Text>
-                        <Text style={{ fontSize: 12, fontWeight: 600, color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{method}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '400', color: '#000000', fontFamily: 'Poppins-Regular' }}>Payment Method</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{method}</Text>
                     </View>
                     <View style={styles.dashedLine} />
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
-                        <Text style={{ fontSize: 12, fontWeight: 600, color: '#000000', fontFamily: 'Poppins-SemiBold' }}>Total Amount</Text>
-                        <Text style={{ fontSize: 16, fontWeight: 600, color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{amount}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#000000', fontFamily: 'Poppins-SemiBold' }}>Total Amount</Text>
+                        <Text style={{ fontSize: 16, fontWeight: '600', color: '#000000', fontFamily: 'Poppins-SemiBold' }}>{amount}</Text>
                     </View>
                     <View style={styles.dashedLine} />
                     <Text
                         style={{
-                            fontSize: 12, fontWeight: 400, fontFamily: 'Poppins-Regular',
+                            fontSize: 12, fontWeight: '400', fontFamily: 'Poppins-Regular',
                             color: '#4F4D55', alignSelf: 'center', paddingBottom: 16, paddingTop: 12
                         }}
                     >You will be redirected to the merchant's page</Text>
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     successfulHeading: {
         color: '#019939',
         fontSize: 20,
-        fontWeight: 600,
+        fontWeight: '600',
         alignSelf: 'center',
         paddingTop: 8,
         fontFamily: 'Poppins-SemiBold'

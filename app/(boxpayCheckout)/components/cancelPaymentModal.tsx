@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         textAlign: 'center',
-        fontWeight: 600,
+        fontWeight: '600',
         fontFamily: 'Poppins-SemiBold'
     },
 });

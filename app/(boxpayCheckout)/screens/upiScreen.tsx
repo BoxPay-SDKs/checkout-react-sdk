@@ -75,7 +75,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                         style={styles.intentIcon}
                                     />
                                 </Pressable>
-                                <Text style={[styles.intentTitle, selectedIntent === 'GPay' && { color: selectedColor, fontWeight: 600 }]}>GPay</Text>
+                                <Text style={[styles.intentTitle, selectedIntent === 'GPay' && { color: selectedColor, fontWeight: '600' }]}>GPay</Text>
                             </View>
                         )}
                         {isPhonePeVisible && (
@@ -98,7 +98,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                     />
                                 </Pressable>
 
-                                <Text style={[styles.intentTitle, selectedIntent === 'PhonePe' && { color: selectedColor, fontWeight: 600 }]}>PhonePe</Text>
+                                <Text style={[styles.intentTitle, selectedIntent === 'PhonePe' && { color: selectedColor, fontWeight: '600' }]}>PhonePe</Text>
                             </View>
                         )}
                         {isPaytmVisible && (
@@ -120,7 +120,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                                         style={{ height: 28, width: 44 }}
                                     />
                                 </Pressable>
-                                <Text style={[styles.intentTitle, selectedIntent === 'PayTm' && { color: selectedColor, fontWeight: 600 }]}>PayTm</Text>
+                                <Text style={[styles.intentTitle, selectedIntent === 'PayTm' && { color: selectedColor, fontWeight: '600' }]}>PayTm</Text>
                             </View>
                         )}
                         <View style={styles.intentContainer}>
@@ -267,7 +267,7 @@ const UpiScreen: React.FC<UpiScreenProps> = ({ selectedColor, isUpiIntentVisible
                             />
                             {upiCollectError && (
                                 <Text style={{
-                                    fontSize: 12, fontWeight: 400, color: '#E12121', marginStart: 16, marginHorizontal: 16,
+                                    fontSize: 12, fontWeight: '400', color: '#E12121', marginStart: 16, marginHorizontal: 16,
                                     fontFamily: 'Poppins-Regular'
                                 }}>Please enter a valid UPI Id</Text>
                             )}
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         fontSize: 14,
         fontFamily: 'Poppins-Regular',
-        fontWeight: 400,
+        fontWeight: '400',
         color: '#0A090B'
     },
     intentIcon: {
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
         color: "#363840",
         fontSize: 14,
         fontFamily: 'Poppins-Regular',
-        fontWeight: 400
+        fontWeight: '400'
     },
     intentBackground: {
         borderColor: '#F1F1F1',

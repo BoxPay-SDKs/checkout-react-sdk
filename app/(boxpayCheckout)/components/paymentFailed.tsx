@@ -24,7 +24,7 @@ const PaymentFailed: React.FC<PaymentFailedProps> = ({ onClick, buttonColor, err
                         style={{ width: 90, height: 90, alignSelf: 'center' }}
                     />
                     <Text style={styles.successfulHeading}>Payment Failed</Text>
-                    <Text style={{ fontSize: 14, fontFamily: 'Poppins-Regular', fontWeight: 400, color: '#000000D9', textAlign: 'center', alignSelf: 'center', paddingTop: 8, paddingBottom: 16, lineHeight: 20 }}>{errorMessage}</Text>
+                    <Text style={{ fontSize: 14, fontFamily: 'Poppins-Regular', fontWeight: '400', color: '#000000D9', textAlign: 'center', alignSelf: 'center', paddingTop: 8, paddingBottom: 16, lineHeight: 20 }}>{errorMessage}</Text>
                     <Pressable style={[styles.buttonContainer, { backgroundColor: buttonColor }]} onPress={onClick}>
                         <Text style={styles.buttonText}>Return to Payment Options</Text>
                     </Pressable>
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     successfulHeading: {
         color: '#E84142',
         fontSize: 20,
-        fontWeight: 600,
+        fontWeight: '600',
         alignSelf: 'center',
         paddingTop: 8,
         fontFamily: 'Poppins-SemiBold'

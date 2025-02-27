@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   amount: {
     fontFamily: 'Poppins-SemiBold',
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: '600',
     color: '#4F4D55'
   }
 });

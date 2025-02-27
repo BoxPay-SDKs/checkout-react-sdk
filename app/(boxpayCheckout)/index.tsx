@@ -155,7 +155,6 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, sandboxEnv }) =>
     };
 
     const navigateToUpiTimerModal = (upiId: string) => {
-        console.log(`onpaymentresult ${paymentHandler.onPaymentResult}`)
         setLoadingState(false)
         router.push({
             pathname: "/screens/upiTimerScreen",
@@ -346,7 +345,6 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, sandboxEnv }) =>
                     }
                 }
             } catch (error) {
-                console.log(error)
                 ToastAndroid.show("Please check the token and the envirounment selected", ToastAndroid.SHORT);
             } finally {
                 setIsFirstLoading(false); // Set loading to false when API request is finished
@@ -440,7 +438,7 @@ const BoxpayCheckout: React.FC<BoxpayCheckoutProps> = ({ token, sandboxEnv }) =>
                                                 fontFamily: 'Poppins-Regular'
                                             }}>Deliver at <Text style={{
                                                 fontFamily: 'Poppins-Bold', fontSize
-                                                    : 12, fontWeight: 600, color: '#4F4D55'
+                                                    : 12, fontWeight: '600', color: '#4F4D55'
                                             }}>{labelType}</Text>
                                             </Text>
                                             <Text style={{
